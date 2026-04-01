@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketInventoryMapper">
+
+    <resultMap id="TicketInventoryMap" type="com.eaglepoint.venue.domain.TicketInventory">
+        <id property="id" column="id"/>
+        <result property="ticketTypeId" column="ticket_type_id"/>
+        <result property="channel" column="channel"/>
+        <result property="allocated" column="allocated"/>
+        <result property="sold" column="sold"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketInventory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_inventory (ticket_type_id, channel, allocated, sold)
+        VALUES (#{ticketTypeId}, #{channel}, #{allocated}, #{sold})
+    </insert>
+
+    <select id="findByTicketTypeId" parameterType="long" resultMap="TicketInventoryMap">
+        SELECT id, ticket_type_id, channel, allocated, sold
+        FROM ticket_inventory
+        WHERE ticket_type_id = #{ticketTypeId}
+        ORDER BY id
+    </select>
+
+    <select id="findByTicketTypeIdAndChannel" resultMap="TicketInventoryMap">
+        SELECT id, ticket_type_id, channel, allocated, sold
+        FROM ticket_inventory
+        WHERE ticket_type_id = #{ticketTypeId}
+          AND channel = #{channel}
+    </select>
+
+    <update id="incrementSoldWithinQuota">
+        UPDATE ticket_inventory
+        SET sold = sold + #{quantity}
+        WHERE ticket_type_id = #{ticketTypeId}
+          AND channel = #{channel}
+          AND sold + #{quantity} &lt;= allocated
+    </update>
+
+    <update id="decrementSold">
+        UPDATE ticket_inventory
+        SET sold = IF(sold - #{quantity} &lt; 0, 0, sold - #{quantity})
+        WHERE ticket_type_id = #{ticketTypeId}
+          AND channel = #{channel}
+    </update>
+</mapper>

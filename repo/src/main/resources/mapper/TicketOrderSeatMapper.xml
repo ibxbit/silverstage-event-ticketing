@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketOrderSeatMapper">
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketOrderSeat" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_order_seat (order_id, seat_id)
+        VALUES (#{orderId}, #{seatId})
+    </insert>
+
+    <select id="findSeatIdsByOrderId" parameterType="long" resultType="long">
+        SELECT seat_id
+        FROM ticket_order_seat
+        WHERE order_id = #{orderId}
+        ORDER BY seat_id
+    </select>
+</mapper>

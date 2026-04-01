@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.CommunityAnnouncementMapper">
+
+    <resultMap id="CommunityAnnouncementMap" type="com.eaglepoint.venue.domain.CommunityAnnouncement">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="author" column="author"/>
+        <result property="category" column="category"/>
+        <result property="wordCount" column="word_count"/>
+        <result property="popularity" column="popularity"/>
+        <result property="publishedAt" column="published_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="CommunityAnnouncementMap">
+        SELECT id, title, body, author, category, word_count, popularity, published_at
+        FROM community_announcement
+        ORDER BY published_at DESC, id DESC
+    </select>
+</mapper>

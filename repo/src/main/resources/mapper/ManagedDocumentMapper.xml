@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ManagedDocumentMapper">
+
+    <resultMap id="ManagedDocumentMap" type="com.eaglepoint.venue.domain.ManagedDocument">
+        <id property="id" column="id"/>
+        <result property="folderId" column="folder_id"/>
+        <result property="title" column="title"/>
+        <result property="accessLevel" column="access_level"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ManagedDocument" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO managed_document (folder_id, title, access_level, created_by)
+        VALUES (#{folderId}, #{title}, #{accessLevel}, #{createdBy})
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="ManagedDocumentMap">
+        SELECT id, folder_id, title, access_level, created_by, created_at, updated_at
+        FROM managed_document
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="ManagedDocumentMap">
+        SELECT id, folder_id, title, access_level, created_by, created_at, updated_at
+        FROM managed_document
+        ORDER BY updated_at DESC, id DESC
+    </select>
+</mapper>

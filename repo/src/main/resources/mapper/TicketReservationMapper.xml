@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketReservationMapper">
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketReservation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_reservation (
+            ticket_type_id, reservation_code, buyer_reference, channel, quantity, unit_price, total_amount, status
+        ) VALUES (
+            #{ticketTypeId}, #{reservationCode}, #{buyerReference}, #{channel}, #{quantity}, #{unitPrice}, #{totalAmount}, #{status}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE ticket_reservation
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+</mapper>

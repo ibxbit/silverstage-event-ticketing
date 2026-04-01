@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.UserAccountMapper">
+    <resultMap id="UserAccountMap" type="com.eaglepoint.venue.domain.UserAccount">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="role" column="role"/>
+        <result property="failedAttempts" column="failed_attempts"/>
+        <result property="lockoutUntil" column="lockout_until"/>
+        <result property="active" column="active"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.UserAccount" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_account (username, password_hash, role, failed_attempts, lockout_until, active)
+        VALUES (#{username}, #{passwordHash}, #{role}, #{failedAttempts}, #{lockoutUntil}, #{active})
+    </insert>
+
+    <select id="findByUsername" parameterType="string" resultMap="UserAccountMap">
+        SELECT id, username, password_hash, role, failed_attempts, lockout_until, active
+        FROM user_account WHERE username = #{username}
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="UserAccountMap">
+        SELECT id, username, password_hash, role, failed_attempts, lockout_until, active
+        FROM user_account WHERE id = #{id}
+    </select>
+
+    <update id="updateLoginFailure">
+        UPDATE user_account SET failed_attempts = #{failedAttempts}, lockout_until = #{lockoutUntil} WHERE id = #{id}
+    </update>
+
+    <update id="resetLoginFailures">
+        UPDATE user_account SET failed_attempts = 0, lockout_until = NULL WHERE id = #{id}
+    </update>
+</mapper>

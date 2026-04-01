@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ZoneMapper">
+
+    <resultMap id="ZoneMap" type="com.eaglepoint.venue.domain.Zone">
+        <id property="id" column="id"/>
+        <result property="standId" column="stand_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="capacity" column="capacity"/>
+    </resultMap>
+
+    <select id="findByStandId" parameterType="long" resultMap="ZoneMap">
+        SELECT id, stand_id, session_id, code, name, capacity
+        FROM zone
+        WHERE stand_id = #{standId}
+        ORDER BY id
+    </select>
+
+    <select id="findBySessionId" parameterType="long" resultMap="ZoneMap">
+        SELECT id, stand_id, session_id, code, name, capacity
+        FROM zone
+        WHERE session_id = #{sessionId}
+        ORDER BY id
+    </select>
+</mapper>

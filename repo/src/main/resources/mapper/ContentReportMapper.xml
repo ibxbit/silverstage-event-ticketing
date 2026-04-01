@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ContentReportMapper">
+
+    <resultMap id="ContentReportMap" type="com.eaglepoint.venue.domain.ContentReport">
+        <id property="id" column="id"/>
+        <result property="reporterUser" column="reporter_user"/>
+        <result property="reportedUser" column="reported_user"/>
+        <result property="contentType" column="content_type"/>
+        <result property="contentRef" column="content_ref"/>
+        <result property="reason" column="reason"/>
+        <result property="status" column="status"/>
+        <result property="moderatorUser" column="moderator_user"/>
+        <result property="decisionNotes" column="decision_notes"/>
+        <result property="penaltyType" column="penalty_type"/>
+        <result property="penaltyEndsAt" column="penalty_ends_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="resolvedAt" column="resolved_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ContentReport" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_report (
+            reporter_user, reported_user, content_type, content_ref, reason, status
+        ) VALUES (
+            #{reporterUser}, #{reportedUser}, #{contentType}, #{contentRef}, #{reason}, #{status}
+        )
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="ContentReportMap">
+        SELECT id, reporter_user, reported_user, content_type, content_ref, reason, status, moderator_user,
+               decision_notes, penalty_type, penalty_ends_at, created_at, resolved_at
+        FROM content_report
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByStatus" parameterType="string" resultMap="ContentReportMap">
+        SELECT id, reporter_user, reported_user, content_type, content_ref, reason, status, moderator_user,
+               decision_notes, penalty_type, penalty_ends_at, created_at, resolved_at
+        FROM content_report
+        WHERE status = #{status}
+        ORDER BY created_at DESC, id DESC
+    </select>
+
+    <update id="resolveReport">
+        UPDATE content_report
+        SET status = #{status},
+            moderator_user = #{moderatorUser},
+            decision_notes = #{decisionNotes},
+            penalty_type = #{penaltyType},
+            penalty_ends_at = #{penaltyEndsAt},
+            resolved_at = #{resolvedAt}
+        WHERE id = #{id}
+          AND status = 'OPEN'
+    </update>
+</mapper>

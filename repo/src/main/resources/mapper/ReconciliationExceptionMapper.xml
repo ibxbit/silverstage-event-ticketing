@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ReconciliationExceptionMapper">
+    <resultMap id="ExMap" type="com.eaglepoint.venue.domain.ReconciliationException">
+        <id property="id" column="id"/>
+        <result property="transactionRef" column="transaction_ref"/>
+        <result property="exceptionType" column="exception_type"/>
+        <result property="detail" column="detail"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ReconciliationException" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO reconciliation_exception (transaction_ref, exception_type, detail)
+        VALUES (#{transactionRef}, #{exceptionType}, #{detail})
+    </insert>
+    <select id="findAll" resultMap="ExMap">SELECT * FROM reconciliation_exception ORDER BY id DESC</select>
+</mapper>

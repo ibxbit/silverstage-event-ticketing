@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.SeasonMapper">
+
+    <resultMap id="SeasonMap" type="com.eaglepoint.venue.domain.Season">
+        <id property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="name" column="name"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+    </resultMap>
+
+    <select id="findByEventId" parameterType="long" resultMap="SeasonMap">
+        SELECT id, event_id, name, start_date, end_date
+        FROM season
+        WHERE event_id = #{eventId}
+        ORDER BY start_date, id
+    </select>
+
+    <select id="findAll" resultMap="SeasonMap">
+        SELECT id, event_id, name, start_date, end_date
+        FROM season
+        ORDER BY start_date DESC, id DESC
+    </select>
+</mapper>

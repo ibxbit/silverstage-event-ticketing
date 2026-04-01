@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.SessionMapper">
+
+    <resultMap id="SessionMap" type="com.eaglepoint.venue.domain.SessionEntity">
+        <id property="id" column="id"/>
+        <result property="seasonId" column="season_id"/>
+        <result property="title" column="title"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+    </resultMap>
+
+    <select id="findBySeasonId" parameterType="long" resultMap="SessionMap">
+        SELECT id, season_id, title, start_time, end_time
+        FROM session
+        WHERE season_id = #{seasonId}
+        ORDER BY start_time, id
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="SessionMap">
+        SELECT id, season_id, title, start_time, end_time
+        FROM session
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="SessionMap">
+        SELECT id, season_id, title, start_time, end_time
+        FROM session
+        ORDER BY start_time DESC, id DESC
+    </select>
+</mapper>

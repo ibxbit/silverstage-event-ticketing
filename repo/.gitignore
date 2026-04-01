@@ -1,0 +1,32 @@
+# Maven ignore
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.restore
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Log and persistence ignore
+logs/
+local-storage/
+*.log
+
+# IDE ignore
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temp ignore
+.tmp/
+.gemini/
+
+# Local env secrets
+.env
+node_modules/
+coverage/

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.UserPenaltyMapper">
+
+    <resultMap id="UserPenaltyMap" type="com.eaglepoint.venue.domain.UserPenalty">
+        <id property="id" column="id"/>
+        <result property="reportId" column="report_id"/>
+        <result property="username" column="username"/>
+        <result property="penaltyType" column="penalty_type"/>
+        <result property="startsAt" column="starts_at"/>
+        <result property="endsAt" column="ends_at"/>
+        <result property="active" column="active"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.UserPenalty" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_penalty (report_id, username, penalty_type, starts_at, ends_at, active)
+        VALUES (#{reportId}, #{username}, #{penaltyType}, #{startsAt}, #{endsAt}, #{active})
+    </insert>
+
+    <select id="findActiveByUsername" resultMap="UserPenaltyMap">
+        SELECT id, report_id, username, penalty_type, starts_at, ends_at, active
+        FROM user_penalty
+        WHERE username = #{username}
+          AND active = 'Y'
+          AND (ends_at IS NULL OR ends_at &gt;= #{now})
+        ORDER BY starts_at DESC
+    </select>
+
+    <update id="deactivateExpired">
+        UPDATE user_penalty
+        SET active = 'N'
+        WHERE active = 'Y'
+          AND ends_at IS NOT NULL
+          AND ends_at &lt; #{now}
+    </update>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ManagedDocumentVersionMapper">
+
+    <resultMap id="ManagedDocumentVersionMap" type="com.eaglepoint.venue.domain.ManagedDocumentVersion">
+        <id property="id" column="id"/>
+        <result property="documentId" column="document_id"/>
+        <result property="versionNumber" column="version_number"/>
+        <result property="storedPath" column="stored_path"/>
+        <result property="originalFileName" column="original_file_name"/>
+        <result property="contentType" column="content_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="checksum" column="checksum"/>
+        <result property="uploadedBy" column="uploaded_by"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ManagedDocumentVersion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO managed_document_version (
+            document_id, version_number, stored_path, original_file_name, content_type, file_size, checksum, uploaded_by
+        ) VALUES (
+            #{documentId}, #{versionNumber}, #{storedPath}, #{originalFileName}, #{contentType}, #{fileSize}, #{checksum}, #{uploadedBy}
+        )
+    </insert>
+
+    <select id="findLatestByDocumentId" parameterType="long" resultMap="ManagedDocumentVersionMap">
+        SELECT id, document_id, version_number, stored_path, original_file_name, content_type, file_size, checksum, uploaded_by, created_at
+        FROM managed_document_version
+        WHERE document_id = #{documentId}
+        ORDER BY version_number DESC
+        LIMIT 1
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="ManagedDocumentVersionMap">
+        SELECT id, document_id, version_number, stored_path, original_file_name, content_type, file_size, checksum, uploaded_by, created_at
+        FROM managed_document_version
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByDocumentId" parameterType="long" resultMap="ManagedDocumentVersionMap">
+        SELECT id, document_id, version_number, stored_path, original_file_name, content_type, file_size, checksum, uploaded_by, created_at
+        FROM managed_document_version
+        WHERE document_id = #{documentId}
+        ORDER BY version_number DESC
+    </select>
+</mapper>

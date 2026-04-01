@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketTypeMapper">
+
+    <resultMap id="TicketTypeMap" type="com.eaglepoint.venue.domain.TicketType">
+        <id property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="basePrice" column="base_price"/>
+        <result property="visibilityScope" column="visibility_scope"/>
+        <result property="saleStart" column="sale_start"/>
+        <result property="saleEnd" column="sale_end"/>
+        <result property="totalInventory" column="total_inventory"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketType" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_type (
+            event_id, code, name, base_price, visibility_scope, sale_start, sale_end, total_inventory
+        ) VALUES (
+            #{eventId}, #{code}, #{name}, #{basePrice}, #{visibilityScope}, #{saleStart}, #{saleEnd}, #{totalInventory}
+        )
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="TicketTypeMap">
+        SELECT id, event_id, code, name, base_price, visibility_scope, sale_start, sale_end, total_inventory
+        FROM ticket_type
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByEventId" parameterType="long" resultMap="TicketTypeMap">
+        SELECT id, event_id, code, name, base_price, visibility_scope, sale_start, sale_end, total_inventory
+        FROM ticket_type
+        WHERE event_id = #{eventId}
+        ORDER BY id
+    </select>
+</mapper>

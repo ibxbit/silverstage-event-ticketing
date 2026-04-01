@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: senior-venue-platform
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./local-storage/senior-venue-platform;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  sql:
+    init:
+      mode: always
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+server:
+  port: 8080
+
+logging:
+  file:
+    name: logs/platform.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %msg%n"
+
+app:
+  quota:
+    online-percent: 60
+    box-office-percent: 40
+  security:
+    aes-key: ${APP_SECURITY_AES_KEY:0123456789ABCDEF0123456789ABCDEF}
+  files:
+    max-upload-bytes: 10485760
+    allowed-content-types: application/pdf,text/plain,text/csv,application/json,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg
+  moderation:
+    max-evidence-bytes: 5242880
+    allowed-evidence-content-types: image/png,image/jpeg,application/pdf,text/plain

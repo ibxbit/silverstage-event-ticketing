@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.AuthSessionMapper">
+    <resultMap id="AuthSessionMap" type="com.eaglepoint.venue.domain.AuthSession">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="token" column="token"/>
+        <result property="expiresAt" column="expires_at"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.AuthSession" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO auth_session (user_id, token, expires_at) VALUES (#{userId}, #{token}, #{expiresAt})
+    </insert>
+    <select id="findValidByToken" resultMap="AuthSessionMap">
+        SELECT id, user_id, token, expires_at FROM auth_session WHERE token = #{token} AND expires_at &gt;= #{now}
+    </select>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ContentAuditLogMapper">
+
+    <resultMap id="ContentAuditLogMap" type="com.eaglepoint.venue.domain.ContentAuditLog">
+        <id property="id" column="id"/>
+        <result property="contentId" column="content_id"/>
+        <result property="versionId" column="version_id"/>
+        <result property="action" column="action"/>
+        <result property="changedBy" column="changed_by"/>
+        <result property="changeDetail" column="change_detail"/>
+        <result property="changedAt" column="changed_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ContentAuditLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_audit_log (content_id, version_id, action, changed_by, change_detail)
+        VALUES (#{contentId}, #{versionId}, #{action}, #{changedBy}, #{changeDetail})
+    </insert>
+
+    <select id="findByContentId" parameterType="long" resultMap="ContentAuditLogMap">
+        SELECT id, content_id, version_id, action, changed_by, change_detail, changed_at
+        FROM content_audit_log
+        WHERE content_id = #{contentId}
+        ORDER BY changed_at DESC, id DESC
+    </select>
+</mapper>

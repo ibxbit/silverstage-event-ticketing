@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.PaymentTransactionMapper">
+    <resultMap id="PaymentMap" type="com.eaglepoint.venue.domain.PaymentTransaction">
+        <id property="id" column="id"/>
+        <result property="transactionRef" column="transaction_ref"/>
+        <result property="tenderType" column="tender_type"/>
+        <result property="grossAmount" column="gross_amount"/>
+        <result property="refundedAmount" column="refunded_amount"/>
+        <result property="merchantCode" column="merchant_code"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.PaymentTransaction" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO payment_transaction (transaction_ref, tender_type, gross_amount, refunded_amount, merchant_code, status)
+        VALUES (#{transactionRef}, #{tenderType}, #{grossAmount}, #{refundedAmount}, #{merchantCode}, #{status})
+    </insert>
+    <select id="findByTransactionRef" parameterType="string" resultMap="PaymentMap">
+        SELECT * FROM payment_transaction WHERE transaction_ref = #{transactionRef}
+    </select>
+    <select id="findAll" resultMap="PaymentMap">
+        SELECT * FROM payment_transaction ORDER BY id DESC
+    </select>
+    <update id="updateStatus">UPDATE payment_transaction SET status=#{status} WHERE id=#{id}</update>
+    <update id="incrementRefunded">UPDATE payment_transaction SET refunded_amount=refunded_amount+#{amount} WHERE id=#{id}</update>
+</mapper>

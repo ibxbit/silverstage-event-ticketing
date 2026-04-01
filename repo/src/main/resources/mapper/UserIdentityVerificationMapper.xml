@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.UserIdentityVerificationMapper">
+    <resultMap id="VerifyMap" type="com.eaglepoint.venue.domain.UserIdentityVerification">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="fullNameEncrypted" column="full_name_encrypted"/>
+        <result property="idType" column="id_type"/>
+        <result property="idNumberEncrypted" column="id_number_encrypted"/>
+        <result property="idNumberMasked" column="id_number_masked"/>
+        <result property="status" column="status"/>
+        <result property="reviewedBy" column="reviewed_by"/>
+        <result property="reviewNotes" column="review_notes"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="reviewedAt" column="reviewed_at"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.UserIdentityVerification" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_identity_verification (user_id, full_name_encrypted, id_type, id_number_encrypted, id_number_masked, status)
+        VALUES (#{userId}, #{fullNameEncrypted}, #{idType}, #{idNumberEncrypted}, #{idNumberMasked}, #{status})
+    </insert>
+    <select id="findById" parameterType="long" resultMap="VerifyMap">
+        SELECT * FROM user_identity_verification WHERE id = #{id}
+    </select>
+    <select id="findLatestByUserId" parameterType="long" resultMap="VerifyMap">
+        SELECT * FROM user_identity_verification WHERE user_id = #{userId} ORDER BY id DESC LIMIT 1
+    </select>
+    <select id="findPending" resultMap="VerifyMap">
+        SELECT * FROM user_identity_verification WHERE status = 'PENDING' ORDER BY submitted_at ASC
+    </select>
+    <update id="review">
+        UPDATE user_identity_verification SET status=#{status}, reviewed_by=#{reviewedBy}, review_notes=#{reviewNotes}, reviewed_at=CURRENT_TIMESTAMP WHERE id=#{id}
+    </update>
+</mapper>

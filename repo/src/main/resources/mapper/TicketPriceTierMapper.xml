@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketPriceTierMapper">
+
+    <resultMap id="TicketPriceTierMap" type="com.eaglepoint.venue.domain.TicketPriceTier">
+        <id property="id" column="id"/>
+        <result property="ticketTypeId" column="ticket_type_id"/>
+        <result property="tierOrder" column="tier_order"/>
+        <result property="minQuantity" column="min_quantity"/>
+        <result property="price" column="price"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketPriceTier" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_price_tier (ticket_type_id, tier_order, min_quantity, price)
+        VALUES (#{ticketTypeId}, #{tierOrder}, #{minQuantity}, #{price})
+    </insert>
+
+    <select id="findByTicketTypeId" parameterType="long" resultMap="TicketPriceTierMap">
+        SELECT id, ticket_type_id, tier_order, min_quantity, price
+        FROM ticket_price_tier
+        WHERE ticket_type_id = #{ticketTypeId}
+        ORDER BY min_quantity
+    </select>
+
+    <select id="findApplicablePrice" resultType="java.math.BigDecimal">
+        SELECT price
+        FROM ticket_price_tier
+        WHERE ticket_type_id = #{ticketTypeId}
+          AND min_quantity &lt;= #{quantity}
+        ORDER BY min_quantity DESC
+        LIMIT 1
+    </select>
+</mapper>

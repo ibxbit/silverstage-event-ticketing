@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ManagedDownloadLinkMapper">
+
+    <resultMap id="ManagedDownloadLinkMap" type="com.eaglepoint.venue.domain.ManagedDownloadLink">
+        <id property="id" column="id"/>
+        <result property="documentId" column="document_id"/>
+        <result property="versionId" column="version_id"/>
+        <result property="token" column="token"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdBy" column="created_by"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ManagedDownloadLink" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO managed_download_link (document_id, version_id, token, expires_at, created_by)
+        VALUES (#{documentId}, #{versionId}, #{token}, #{expiresAt}, #{createdBy})
+    </insert>
+
+    <select id="findValidByToken" resultMap="ManagedDownloadLinkMap">
+        SELECT id, document_id, version_id, token, expires_at, created_by
+        FROM managed_download_link
+        WHERE token = #{token}
+          AND expires_at &gt;= #{now}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+</mapper>

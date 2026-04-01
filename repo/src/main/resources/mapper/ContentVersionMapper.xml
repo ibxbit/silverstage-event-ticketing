@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ContentVersionMapper">
+
+    <resultMap id="ContentVersionMap" type="com.eaglepoint.venue.domain.ContentVersion">
+        <id property="id" column="id"/>
+        <result property="contentId" column="content_id"/>
+        <result property="versionNumber" column="version_number"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="changedBy" column="changed_by"/>
+        <result property="changeType" column="change_type"/>
+        <result property="changeSummary" column="change_summary"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ContentVersion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_version (
+            content_id, version_number, title, body, changed_by, change_type, change_summary
+        ) VALUES (
+            #{contentId}, #{versionNumber}, #{title}, #{body}, #{changedBy}, #{changeType}, #{changeSummary}
+        )
+    </insert>
+
+    <select id="findByContentIdAndVersion" resultMap="ContentVersionMap">
+        SELECT id, content_id, version_number, title, body, changed_by, change_type, change_summary, created_at
+        FROM content_version
+        WHERE content_id = #{contentId}
+          AND version_number = #{versionNumber}
+    </select>
+
+    <select id="findLatestByContentId" parameterType="long" resultMap="ContentVersionMap">
+        SELECT id, content_id, version_number, title, body, changed_by, change_type, change_summary, created_at
+        FROM content_version
+        WHERE content_id = #{contentId}
+        ORDER BY version_number DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByContentId" parameterType="long" resultMap="ContentVersionMap">
+        SELECT id, content_id, version_number, title, body, changed_by, change_type, change_summary, created_at
+        FROM content_version
+        WHERE content_id = #{contentId}
+        ORDER BY version_number DESC
+    </select>
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.EventMapper">
+
+    <resultMap id="EventMap" type="com.eaglepoint.venue.domain.Event">
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="EventMap">
+        SELECT id, code, name, start_date, end_date
+        FROM event
+        ORDER BY start_date, id
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="EventMap">
+        SELECT id, code, name, start_date, end_date
+        FROM event
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.Event" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO event (code, name, start_date, end_date)
+        VALUES (#{code}, #{name}, #{startDate}, #{endDate})
+    </insert>
+</mapper>

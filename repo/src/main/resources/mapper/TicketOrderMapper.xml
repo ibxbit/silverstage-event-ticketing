@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.TicketOrderMapper">
+
+    <resultMap id="TicketOrderMap" type="com.eaglepoint.venue.domain.TicketOrder">
+        <id property="id" column="id"/>
+        <result property="eventId" column="event_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="ticketTypeId" column="ticket_type_id"/>
+        <result property="orderCode" column="order_code"/>
+        <result property="buyerReference" column="buyer_reference"/>
+        <result property="channel" column="channel"/>
+        <result property="quantity" column="quantity"/>
+        <result property="status" column="status"/>
+        <result property="holdExpiresAt" column="hold_expires_at"/>
+        <result property="cancelExpiresAt" column="cancel_expires_at"/>
+        <result property="inventoryReturned" column="inventory_returned"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.TicketOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ticket_order (
+            event_id, session_id, ticket_type_id, order_code, buyer_reference, channel, quantity, status, hold_expires_at,
+            cancel_expires_at, inventory_returned
+        ) VALUES (
+            #{eventId}, #{sessionId}, #{ticketTypeId}, #{orderCode}, #{buyerReference}, #{channel}, #{quantity}, #{status},
+            #{holdExpiresAt}, #{cancelExpiresAt}, #{inventoryReturned}
+        )
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="TicketOrderMap">
+        SELECT id, event_id, session_id, ticket_type_id, order_code, buyer_reference, channel, quantity, status,
+               hold_expires_at, cancel_expires_at, inventory_returned
+        FROM ticket_order
+        WHERE id = #{id}
+    </select>
+
+    <select id="findExpiredSeatHolds" resultMap="TicketOrderMap">
+        SELECT id, event_id, session_id, ticket_type_id, order_code, buyer_reference, channel, quantity, status,
+               hold_expires_at, cancel_expires_at, inventory_returned
+        FROM ticket_order
+        WHERE status = 'UNPAID'
+          AND hold_expires_at &lt;= #{now}
+    </select>
+
+    <select id="findAutoCancellableOrders" resultMap="TicketOrderMap">
+        SELECT id, event_id, session_id, ticket_type_id, order_code, buyer_reference, channel, quantity, status,
+               hold_expires_at, cancel_expires_at, inventory_returned
+        FROM ticket_order
+        WHERE status IN ('UNPAID', 'HOLD_RELEASED')
+          AND cancel_expires_at &lt;= #{now}
+    </select>
+
+    <update id="markHoldReleased">
+        UPDATE ticket_order
+        SET status = 'HOLD_RELEASED'
+        WHERE id = #{id}
+          AND status = 'UNPAID'
+    </update>
+
+    <update id="markPaid">
+        UPDATE ticket_order
+        SET status = 'PAID'
+        WHERE id = #{id}
+          AND status = 'UNPAID'
+    </update>
+
+    <update id="markCancelledAndInventoryReturned">
+        UPDATE ticket_order
+        SET status = 'CANCELLED',
+            inventory_returned = 1
+        WHERE id = #{id}
+          AND status IN ('UNPAID', 'HOLD_RELEASED')
+          AND inventory_returned = 0
+    </update>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.ContentAppealMapper">
+
+    <resultMap id="ContentAppealMap" type="com.eaglepoint.venue.domain.ContentAppeal">
+        <id property="id" column="id"/>
+        <result property="contentId" column="content_id"/>
+        <result property="requestedBy" column="requested_by"/>
+        <result property="justification" column="justification"/>
+        <result property="status" column="status"/>
+        <result property="reviewedBy" column="reviewed_by"/>
+        <result property="reviewNotes" column="review_notes"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="resolvedAt" column="resolved_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.ContentAppeal" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_appeal (content_id, requested_by, justification, status)
+        VALUES (#{contentId}, #{requestedBy}, #{justification}, #{status})
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="ContentAppealMap">
+        SELECT id, content_id, requested_by, justification, status, reviewed_by, review_notes, created_at, resolved_at
+        FROM content_appeal
+        WHERE id = #{id}
+    </select>
+
+    <update id="resolve">
+        UPDATE content_appeal
+        SET status = #{status},
+            reviewed_by = #{reviewedBy},
+            review_notes = #{reviewNotes},
+            resolved_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND status = 'PENDING'
+    </update>
+</mapper>

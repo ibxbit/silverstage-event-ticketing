@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eaglepoint.venue.mapper.PublishedContentMapper">
+
+    <resultMap id="PublishedContentMap" type="com.eaglepoint.venue.domain.PublishedContent">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="state" column="state"/>
+        <result property="currentVersion" column="current_version"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.eaglepoint.venue.domain.PublishedContent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO published_content (title, body, state, current_version, created_by)
+        VALUES (#{title}, #{body}, #{state}, #{currentVersion}, #{createdBy})
+    </insert>
+
+    <select id="findById" parameterType="long" resultMap="PublishedContentMap">
+        SELECT id, title, body, state, current_version, created_by, published_at, created_at, updated_at
+        FROM published_content
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="PublishedContentMap">
+        SELECT id, title, body, state, current_version, created_by, published_at, created_at, updated_at
+        FROM published_content
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
+    <update id="updateBodyAndVersion">
+        UPDATE published_content
+        SET title = #{title},
+            body = #{body},
+            current_version = #{currentVersion},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateState">
+        UPDATE published_content
+        SET state = #{state},
+            published_at = #{publishedAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+</mapper>

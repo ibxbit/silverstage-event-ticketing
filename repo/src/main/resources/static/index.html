@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Senior Community Venue Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <h1>Senior Community Venue Console</h1>
+        <p>Offline-ready ticketing and seating hierarchy explorer</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Events</h2>
+          <button id="refresh-events" type="button">Refresh</button>
+        </div>
+        <ul id="event-list" class="event-list"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Account Access</h2>
+        <div class="selectors">
+          <label>
+            Username
+            <input id="auth-username" type="text" placeholder="username" />
+          </label>
+          <label>
+            Password
+            <input id="auth-password" type="password" placeholder="password" />
+            <span class="field-hint">Minimum 10 characters required.</span>
+          </label>
+          <label>
+            Role
+            <select id="auth-role">
+              <option value="SENIOR">SENIOR</option>
+              <option value="FAMILY_MEMBER">FAMILY_MEMBER</option>
+              <option value="SERVICE_STAFF">SERVICE_STAFF</option>
+              <option value="ORG_ADMIN">ORG_ADMIN</option>
+              <option value="PLATFORM_ADMIN">PLATFORM_ADMIN</option>
+            </select>
+          </label>
+          <button id="auth-register" type="button">Register</button>
+          <button id="auth-login" type="button">Login</button>
+          <button id="auth-logout" type="button" class="is-hidden">Logout</button>
+        </div>
+        <div id="auth-message" class="tree">Login status will appear here.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Hierarchy</h2>
+        <div id="hierarchy-container" class="tree">
+          Select an event to load seasons, sessions, zones, and seats.
+        </div>
+      </section>
+
+      <section class="panel" data-auth-section="authenticated">
+        <h2>Seat Selection</h2>
+        <div class="selectors">
+          <label>
+            Session
+            <select id="session-select"></select>
+          </label>
+          <label>
+            Ticket Option
+            <select id="ticket-type-select"></select>
+          </label>
+          <label>
+            Sales Channel
+            <select id="channel-select">
+              <option value="ONLINE_PORTAL">Online Portal</option>
+              <option value="BOX_OFFICE">Box Office</option>
+            </select>
+          </label>
+          <button id="load-seat-map" type="button">Load Seat Map</button>
+        </div>
+        <div id="inventory-alert" class="alert"></div>
+        <div id="ticket-options" class="tree">
+          Select an event to compare ticket options.
+        </div>
+        <div id="seat-map" class="seat-map"></div>
+        <div class="reservation-tools">
+          <button id="reserve-seats" type="button">
+            Reserve Selected Seats
+          </button>
+          <button id="pay-order" type="button">Mark Last Order Paid</button>
+        </div>
+        <div id="order-status" class="tree">No active order.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Search & Discovery</h2>
+        <div class="selectors">
+          <label>
+            Search
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search events and announcements"
+              autocomplete="off"
+            />
+          </label>
+          <label>
+            Type
+            <select id="search-type">
+              <option value="ALL">All</option>
+              <option value="EVENT">Event</option>
+              <option value="SEASON">Season</option>
+              <option value="SESSION">Session</option>
+              <option value="ANNOUNCEMENT">Announcement</option>
+            </select>
+          </label>
+          <label>
+            Author
+            <input id="search-author" type="text" placeholder="Author" />
+          </label>
+          <label>
+            Category
+            <input id="search-category" type="text" placeholder="Category" />
+          </label>
+          <label>
+            Min Words
+            <input
+              id="search-min-words"
+              type="number"
+              min="0"
+              placeholder="0"
+            />
+          </label>
+          <label>
+            Max Words
+            <input
+              id="search-max-words"
+              type="number"
+              min="0"
+              placeholder="500"
+            />
+          </label>
+          <label>
+            Sort
+            <select id="search-sort">
+              <option value="relevance">Relevance</option>
+              <option value="newest">Newest</option>
+              <option value="popularity">Popularity</option>
+            </select>
+          </label>
+          <button id="search-btn" type="button">Search</button>
+        </div>
+        <div id="typeahead" class="typeahead"></div>
+        <div class="reservation-tools">
+          <button id="browse-seasons" type="button">Browse Seasons</button>
+          <button id="browse-sessions" type="button">Browse Sessions</button>
+          <button id="browse-announcements" type="button">
+            Browse Announcements
+          </button>
+        </div>
+        <div id="search-results" class="tree">Use the search tools above.</div>
+        <div class="reservation-tools">
+          <button id="prev-page" type="button">Prev</button>
+          <button id="next-page" type="button">Next</button>
+          <span id="page-info"></span>
+        </div>
+      </section>
+
+      <section class="panel" data-auth-section="authenticated" data-required-roles="ORG_ADMIN,PLATFORM_ADMIN">
+        <h2>Moderation & Reporting</h2>
+        <div class="selectors">
+          <label>
+            Reported User
+            <input
+              id="reported-user"
+              type="text"
+              placeholder="offending_user"
+            />
+          </label>
+          <label>
+            Content Type
+            <input
+              id="report-content-type"
+              type="text"
+              placeholder="ANNOUNCEMENT"
+            />
+          </label>
+          <label>
+            Content Ref
+            <input
+              id="report-content-ref"
+              type="text"
+              placeholder="announcement:3"
+            />
+          </label>
+          <label>
+            Reason
+            <input
+              id="report-reason"
+              type="text"
+              placeholder="Reason for report"
+            />
+          </label>
+          <label>
+            Evidence (optional)
+            <input id="report-evidence" type="file" multiple />
+          </label>
+          <button id="submit-report" type="button">Submit Report</button>
+        </div>
+
+        <div class="selectors">
+          <label>
+            Moderator Role
+            <select id="moderator-role">
+              <option value="MODERATOR">MODERATOR</option>
+              <option value="ORG_ADMIN">ORG_ADMIN</option>
+            </select>
+          </label>
+          <label>
+            Moderator User
+            <input id="moderator-user" type="text" value="moderator_1" />
+          </label>
+          <button id="load-open-reports" type="button">
+            Load Open Reports
+          </button>
+        </div>
+
+        <div id="moderation-console" class="tree">
+          No moderation cases loaded.
+        </div>
+
+        <div class="selectors">
+          <label>
+            Notification User
+            <input id="notify-user" type="text" value="senior_member_1" />
+          </label>
+          <button id="load-notifications" type="button">
+            Load Notifications
+          </button>
+          <button id="load-penalties" type="button">Load Penalties</button>
+        </div>
+        <div id="moderation-outcome" class="tree">
+          Moderation outcomes will appear here.
+        </div>
+      </section>
+
+      <section class="panel" data-auth-section="authenticated">
+        <h2>Publishing Workflow</h2>
+        <div class="selectors">
+          <label>
+            Actor
+            <input id="publish-actor" type="text" value="author_1" />
+          </label>
+          <label>
+            Reviewer Role
+            <select id="publish-role">
+              <option value="MODERATOR">MODERATOR</option>
+              <option value="ORG_ADMIN">ORG_ADMIN</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input id="publish-title" type="text" placeholder="Content title" />
+          </label>
+          <label>
+            Body
+            <input id="publish-body" type="text" placeholder="Content body" />
+          </label>
+          <label>
+            Summary
+            <input
+              id="publish-summary"
+              type="text"
+              placeholder="Change summary"
+            />
+          </label>
+          <button id="create-draft" type="button">Create Draft</button>
+          <button id="load-content-items" type="button">Load Content</button>
+        </div>
+
+        <div class="selectors">
+          <label>
+            Content ID
+            <input id="workflow-content-id" type="number" min="1" />
+          </label>
+          <label>
+            Appeal ID
+            <input id="workflow-appeal-id" type="number" min="1" />
+          </label>
+          <label>
+            Left Version
+            <input id="workflow-left-version" type="number" min="1" />
+          </label>
+          <label>
+            Right Version
+            <input id="workflow-right-version" type="number" min="1" />
+          </label>
+          <label>
+            Rollback Target Version
+            <input id="workflow-rollback-version" type="number" min="1" />
+          </label>
+          <button id="submit-content" type="button">Submit</button>
+          <button id="review-content" type="button">Review</button>
+          <button id="publish-content" type="button">Publish</button>
+          <button id="update-draft" type="button">Update Draft</button>
+          <button id="request-appeal" type="button">Request Appeal</button>
+          <button id="approve-appeal" type="button">Approve Appeal</button>
+          <button id="apply-correction" type="button">Apply Correction</button>
+          <button id="rollback-content" type="button">Rollback</button>
+          <button id="show-diff" type="button">Show Diff</button>
+          <button id="show-audit" type="button">Show Audit</button>
+        </div>
+
+        <div id="publishing-list" class="tree">No content loaded.</div>
+        <div id="publishing-output" class="tree">
+          Workflow output appears here.
+        </div>
+      </section>
+    </main>
+
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/js/core.js"></script>
+    <script src="/js/events.js"></script>
+    <script src="/js/orders.js"></script>
+    <script src="/js/discovery.js"></script>
+    <script src="/js/moderation.js"></script>
+    <script src="/js/publishing.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
