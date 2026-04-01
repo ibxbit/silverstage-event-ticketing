@@ -7,7 +7,20 @@ REPORT_FILE="$ROOT_DIR/target/unit-test-summary.properties"
 cd "$ROOT_DIR"
 mkdir -p target
 
-mvn -q -Dtest='com.eaglepoint.venue.service.*Test' test
+if ! command -v mvn >/dev/null 2>&1; then
+  echo "Maven executable not found in PATH"
+  exit 1
+fi
+
+MAVEN_LOG="target/unit-test-maven.log"
+if ! env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.service.*Test' test >"$MAVEN_LOG" 2>&1; then
+  if grep -q "org.codehaus.plexus.classworlds.launcher.Launcher" "$MAVEN_LOG"; then
+    echo "Maven bootstrap failed (classworlds launcher not found). See $MAVEN_LOG"
+  else
+    echo "Backend unit test Maven execution failed. See $MAVEN_LOG"
+  fi
+  exit 1
+fi
 
 total=0
 failures=0
@@ -16,10 +29,10 @@ skipped=0
 
 for file in target/surefire-reports/TEST-com.eaglepoint.venue.service.*.xml; do
   [[ -f "$file" ]] || continue
-  tests_in_file=$(awk 'match($0,/tests="([0-9]+)"/,a){print a[1]; exit}' "$file")
-  failures_in_file=$(awk 'match($0,/failures="([0-9]+)"/,a){print a[1]; exit}' "$file")
-  errors_in_file=$(awk 'match($0,/errors="([0-9]+)"/,a){print a[1]; exit}' "$file")
-  skipped_in_file=$(awk 'match($0,/skipped="([0-9]+)"/,a){print a[1]; exit}' "$file")
+  tests_in_file=$(grep -m1 -o 'tests="[0-9]*"' "$file" | cut -d'"' -f2)
+  failures_in_file=$(grep -m1 -o 'failures="[0-9]*"' "$file" | cut -d'"' -f2)
+  errors_in_file=$(grep -m1 -o 'errors="[0-9]*"' "$file" | cut -d'"' -f2)
+  skipped_in_file=$(grep -m1 -o 'skipped="[0-9]*"' "$file" | cut -d'"' -f2)
 
   tests_in_file=${tests_in_file:-0}
   failures_in_file=${failures_in_file:-0}

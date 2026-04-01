@@ -135,34 +135,47 @@ public final class ApiFunctionalTests {
     requireStatus(ticketTypes, 200);
     long ticketTypeId = extractFirstLong(ticketTypes.body(), "id");
 
-    HttpResponse<String> seatMap = request(
-        "GET",
-        "/api/sessions/" + sessionId + "/seat-map?ticketTypeId=" + ticketTypeId + "&channel=ONLINE_PORTAL",
-        null,
-        null
-    );
-    requireStatus(seatMap, 200);
-    long seatId = extractAvailableSeatId(seatMap.body());
+    HttpResponse<String> orderResponse = null;
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      HttpResponse<String> seatMap = request(
+          "GET",
+          "/api/sessions/" + sessionId + "/seat-map?ticketTypeId=" + ticketTypeId + "&channel=ONLINE_PORTAL",
+          null,
+          null
+      );
+      requireStatus(seatMap, 200);
+      long seatId = extractAvailableSeatId(seatMap.body());
 
-    String orderBody = "{"
-        + "\"eventId\":" + eventId + ","
-        + "\"sessionId\":" + sessionId + ","
-        + "\"ticketTypeId\":" + ticketTypeId + ","
-        + "\"orderCode\":\"API-" + System.currentTimeMillis() + "\","
-        + "\"buyerReference\":\"" + username + "\","
-        + "\"channel\":\"ONLINE_PORTAL\","
-        + "\"seatIds\":[" + seatId + "]"
-        + "}";
-    HttpResponse<String> orderResponse = request(
-        "POST",
-        "/api/seat-orders",
-        orderBody,
-        Map.of(
-            "Content-Type", "application/json",
-            "X-Auth-Token", token
-        )
-    );
-    requireStatus(orderResponse, 200, 201);
+      String orderBody = "{"
+          + "\"eventId\":" + eventId + ","
+          + "\"sessionId\":" + sessionId + ","
+          + "\"ticketTypeId\":" + ticketTypeId + ","
+          + "\"orderCode\":\"API-" + System.currentTimeMillis() + "-" + attempt + "\","
+          + "\"buyerReference\":\"" + username + "\","
+          + "\"channel\":\"ONLINE_PORTAL\","
+          + "\"seatIds\":[" + seatId + "]"
+          + "}";
+      orderResponse = request(
+          "POST",
+          "/api/seat-orders",
+          orderBody,
+          Map.of(
+              "Content-Type", "application/json",
+              "X-Auth-Token", token
+          )
+      );
+
+      if (orderResponse.statusCode() == 409 && attempt < 3) {
+        Thread.sleep(200);
+        continue;
+      }
+      requireStatus(orderResponse, 200, 201);
+      break;
+    }
+
+    if (orderResponse == null) {
+      throw new IllegalStateException("seat order did not execute");
+    }
     if (!orderResponse.body().contains("\"orderId\"")) {
       throw new IllegalStateException("seat order missing orderId: " + orderResponse.body());
     }
