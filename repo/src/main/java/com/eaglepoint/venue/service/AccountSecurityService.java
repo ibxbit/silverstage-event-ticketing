@@ -281,7 +281,7 @@ public class AccountSecurityService {
         if (value.length() < 32) {
             throw new IllegalStateException("app.security.aes-key must be at least 32 characters");
         }
-        if (isKnownWeakAesKey(value)) {
+        if (isKnownWeakAesKey(value) || value.contains("${APP_SECURITY_AES_KEY}")) {
             throw new IllegalStateException("app.security.aes-key must not use a default or placeholder value");
         }
         Set<Character> distinct = new HashSet<Character>();

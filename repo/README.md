@@ -84,7 +84,7 @@ Prerequisites for the one-click runner:
 - Maven available in `PATH`
 - Node.js/npm (for frontend Jest tests)
 - JDK 17+ (`javac`) for local API functional test execution
-- Docker is optional and used only as fallback if `javac` is not available
+- Docker is NOT required for local testing if JDK 17+ is present. It is only used for containerized deployment or as a fallback for API tests if a local Java toolchain is unavailable.
 
 The runner executes in order:
 

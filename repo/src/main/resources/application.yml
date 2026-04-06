@@ -28,7 +28,7 @@ app:
     online-percent: 60
     box-office-percent: 40
   security:
-    aes-key: ${APP_SECURITY_AES_KEY}
+    aes-key: ${APP_SECURITY_AES_KEY:}
   files:
     max-upload-bytes: 10485760
     allowed-content-types: application/pdf,text/plain,text/csv,application/json,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg

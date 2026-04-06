@@ -137,6 +137,12 @@ public class TicketingService {
     @Transactional
     public ReservationResponse reserveTickets(String actor, CreateReservationRequest request) {
         String authenticatedBuyer = requireReservationActor(actor);
+        
+        // F-002: Server-side invariant to prevent buyer identity spoofing
+        // Regardless of what the client sent in the request object, we use the authenticatedBuyer.
+        // We also ensure the request object's buyerReference is consistent for audit integrity.
+        request.setBuyerReference(authenticatedBuyer);
+
         String normalizedChannel = request.getChannel().trim().toUpperCase();
         validateChannel(normalizedChannel);
 

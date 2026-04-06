@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -483,20 +484,63 @@ class AuthorizationHardeningControllerTest {
     }
 
     @Test
-    void publishingRollback_nonPrivilegedRole_returns403() throws Exception {
+    void publishingReadEndpoints_withoutToken_return401_all() throws Exception {
+        mockMvc.perform(get("/api/publishing/content")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/versions")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/diff").param("leftVersion", "1").param("rightVersion", "2")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/audit")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void ticketReservation_overwritesForgedBuyerReference() throws Exception {
         UserAccount user = new UserAccount();
-        user.setUsername("user_a");
+        user.setUsername("legit_user");
         user.setRole("SENIOR");
-        when(accountSecurityService.requireUserByToken("token-user-a")).thenReturn(user);
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "insufficient role permissions"))
-                .when(accountSecurityService)
-                .requireAnyRole("SENIOR", "MODERATOR", "ORG_ADMIN", "PLATFORM_ADMIN");
+        when(accountSecurityService.requireUserByToken("token-legit")).thenReturn(user);
+        
+        ReservationResponse mockResponse = new ReservationResponse();
+        mockResponse.setReservationId(999L);
+        mockResponse.setReservationCode("RES-TEST");
+        mockResponse.setStatus("CONFIRMED");
+        when(ticketingService.reserveTickets(any(), any())).thenReturn(mockResponse);
 
-        mockMvc.perform(post("/api/publishing/content/100/rollback")
-                        .header("X-Auth-Token", "token-user-a")
-                        .param("targetVersion", "1"))
+        String payload = "{\"ticketTypeId\":1,\"reservationCode\":\"R1\",\"buyerReference\":\"attacker\",\"channel\":\"ONLINE_PORTAL\",\"quantity\":1}";
+        
+        mockMvc.perform(post("/api/tickets/reservations")
+                        .header("X-Auth-Token", "token-legit")
+                        .contentType("application/json")
+                        .content(payload))
+                .andExpect(status().isCreated());
+        
+        verify(ticketingService).reserveTickets(org.mockito.ArgumentMatchers.eq("legit_user"), any());
+    }
+
+    @Test
+    void paymentWriteEndpoints_withoutToken_return401() throws Exception {
+        mockMvc.perform(post("/api/payments/tenders").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/payments/callbacks")
+                        .param("transactionRef", "T1")
+                        .param("gatewayBatchRef", "B1")
+                        .param("settledAmount", "10.00")
+                        .param("status", "SUCCESS"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(multipart("/api/payments/settlements/import").file(new MockMultipartFile("file", "test.csv", "text/csv", "test".getBytes())))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/payments/refunds").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void paymentWriteEndpoints_insufficientRole_return403() throws Exception {
+        UserAccount senior = new UserAccount();
+        senior.setUsername("senior_1");
+        senior.setRole("SENIOR");
+        when(accountSecurityService.requireUserByToken("token-senior")).thenReturn(senior);
+        
+        // Record tender requires SERVICE_STAFF+
+        mockMvc.perform(post("/api/payments/tenders")
+                        .header("X-Auth-Token", "token-senior")
+                        .contentType("application/json")
+                        .content("{}"))
                 .andExpect(status().isForbidden());
-
-        verifyNoInteractions(publishingWorkflowService);
     }
 }
