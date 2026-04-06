@@ -4,9 +4,9 @@ services:
     container_name: senior_venue_mysql
     environment:
       MYSQL_DATABASE: senior_venue_platform
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
-      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER must be set}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-exampleRootPass123}
+      MYSQL_USER: ${MYSQL_USER:-senior_venue_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-exampleUserPass123}
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
@@ -21,7 +21,7 @@ services:
           "-h",
             "localhost",
             "-uroot",
-            "-p${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}",
+            "-p${MYSQL_ROOT_PASSWORD:-exampleRootPass123}",
         ]
       interval: 5s
       timeout: 5s
@@ -37,10 +37,10 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:?SPRING_DATASOURCE_URL must be set}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:?SPRING_DATASOURCE_USERNAME must be set}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?SPRING_DATASOURCE_PASSWORD must be set}
-      APP_SECURITY_AES_KEY: ${APP_SECURITY_AES_KEY:?APP_SECURITY_AES_KEY must be set}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://mysql:3306/senior_venue_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-senior_venue_user}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-exampleUserPass123}
+      APP_SECURITY_AES_KEY: ${APP_SECURITY_AES_KEY:-UnitTestAESKeyMaterial-1234567890AB}
     restart: on-failure
     ports:
       - "8080:8080"
