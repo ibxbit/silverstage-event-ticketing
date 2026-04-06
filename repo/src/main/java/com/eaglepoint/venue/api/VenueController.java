@@ -40,7 +40,7 @@ public class VenueController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Event createEvent(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody CreateEventRequest request
     ) {
         UserAccount user = accountSecurityService.requireUserByToken(token);

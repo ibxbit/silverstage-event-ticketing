@@ -245,6 +245,15 @@ public class PublishingWorkflowService {
         return rows;
     }
 
+    public List<ContentResponse> listByOwner(String owner) {
+        List<PublishedContent> rowsByOwner = publishedContentMapper.findByCreatedBy(clean(owner));
+        List<ContentResponse> rows = new ArrayList<ContentResponse>();
+        for (PublishedContent content : rowsByOwner) {
+            rows.add(mapContent(content));
+        }
+        return rows;
+    }
+
     public String contentOwner(Long contentId) {
         return mustContent(contentId).getCreatedBy();
     }

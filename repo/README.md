@@ -37,17 +37,27 @@ mvn spring-boot:run
 
 ## Configuration
 
-The application requires the following environment variables to be set:
+The application fails fast at startup if required secrets are missing or weak.
+
+Required environment variables:
 
 - `SPRING_DATASOURCE_URL`: JDBC URL for the MySQL database (e.g., `jdbc:mysql://localhost:3306/senior_venue_platform`)
 - `SPRING_DATASOURCE_USERNAME`: Database username
 - `SPRING_DATASOURCE_PASSWORD`: Database password
-- `APP_SECURITY_AES_KEY`: 32-character AES encryption key for securing sensitive data
+- `APP_SECURITY_AES_KEY`: AES key with at least 32 characters (default/placeholder values are rejected)
+
+Docker profile variables:
+
+- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
 
 A sample `.env` template is provided in the repository root as `.env.example`:
 
 ```
 MYSQL_ROOT_PASSWORD=
+MYSQL_USER=
+MYSQL_PASSWORD=
 SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/senior_venue_platform
 SPRING_DATASOURCE_USERNAME=
 SPRING_DATASOURCE_PASSWORD=
@@ -63,17 +73,24 @@ Copy `.env.example` to `.env` and fill in the appropriate values before running 
 
 ## Verification method
 
-Primary verification is now the unified one-click runner:
+Primary verification is the unified one-click runner:
 
 ```bash
 bash ./run_tests.sh
 ```
 
-The runner executes, in order:
+Prerequisites for the one-click runner:
+
+- Maven available in `PATH`
+- Node.js/npm (for frontend Jest tests)
+- JDK 17+ (`javac`) for local API functional test execution
+- Docker is optional and used only as fallback if `javac` is not available
+
+The runner executes in order:
 
 - backend unit tests from `unit_tests/` (service-layer suite via Maven)
 - frontend Jest tests (`npm test`)
-- API functional tests from `API_tests/` against live HTTP endpoints
+- API functional tests from `API_tests/` against live HTTP endpoints (`javac` local path first, Docker fallback)
 
 It prints a single summary with total/passed/failed counts across all suites.
 
@@ -84,6 +101,11 @@ bash ./unit_tests/run_unit_tests.sh
 bash ./API_tests/run_api_tests.sh
 npm test
 ```
+
+`API_tests/run_api_tests.sh` behavior:
+
+- uses local `javac` + `java` when available
+- falls back to Docker (`maven:3.9.9-eclipse-temurin-17`) when local Java toolchain is unavailable
 
 1. Confirm app is reachable:
 
@@ -126,6 +148,8 @@ curl -X PATCH http://localhost:8080/api/moderation/notifications/1/read
 
 Both requests should return `401` without `X-Auth-Token`.
 
+Requests with a valid token but insufficient role/ownership return `403`.
+
 ## Authorization model (security hardening)
 
 - Privileged APIs do not trust client-supplied role headers.
@@ -135,10 +159,17 @@ Both requests should return `401` without `X-Auth-Token`.
   - self access, or
   - privileged moderator/admin roles.
 - Seat-order write endpoints require token-derived role checks (`SENIOR`, `FAMILY_MEMBER`, `SERVICE_STAFF`, `ORG_ADMIN`, `PLATFORM_ADMIN`).
+- Protected endpoints use consistent auth semantics:
+  - missing/blank `X-Auth-Token` -> `401 Unauthorized`
+  - authenticated but role/ownership mismatch -> `403 Forbidden`
 - `PATCH /api/moderation/notifications/{notificationId}/read` enforces notification ownership for non-privileged users.
 - Publishing correction and rollback governance:
   - corrections require content owner or privileged role (`MODERATOR`, `ORG_ADMIN`, `PLATFORM_ADMIN`),
   - rollback requires privileged role.
+- Publishing read access governance:
+  - `GET /api/publishing/content` requires `X-Auth-Token`
+  - privileged roles (`MODERATOR`, `ORG_ADMIN`, `PLATFORM_ADMIN`) can read broader publishing views
+  - non-privileged users can read only their own publishing items/details (versions/diff/audit)
 - Payment callback idempotency records reconciliation anomalies when duplicate callbacks conflict on amount/status.
 
 ## API contract updates
@@ -147,9 +178,11 @@ Both requests should return `401` without `X-Auth-Token`.
 - Moderation, publishing, and file-management privileged endpoints now require `X-Auth-Token`.
 - `POST /api/moderation/reports` requires `X-Auth-Token`; `reporterUser` may be omitted and defaults to the authenticated username.
 - `POST /api/seat-orders` and `POST /api/seat-orders/{orderId}/pay` require `X-Auth-Token`; buyer identity is server-derived from token user.
+- `POST /api/tickets/reservations` requires `X-Auth-Token`; `buyerReference` is overwritten server-side from authenticated token identity.
 - `PATCH /api/moderation/notifications/{notificationId}/read` now performs object-level ownership checks for non-privileged roles.
 - `POST /api/publishing/content/{contentId}/corrections` requires content owner or privileged role.
 - `POST /api/publishing/content/{contentId}/rollback` requires privileged role.
+- `GET /api/publishing/content`, `GET /api/publishing/content/{contentId}/versions`, `GET /api/publishing/content/{contentId}/diff`, and `GET /api/publishing/content/{contentId}/audit` require `X-Auth-Token` and enforce owner/privileged-role authorization.
 
 ## File upload guardrails
 

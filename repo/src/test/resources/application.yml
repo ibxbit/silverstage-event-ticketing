@@ -10,7 +10,7 @@ spring:
 
 app:
   security:
-    aes-key: test-key-1234567890123456789012
+    aes-key: test-key-material-1234567890-ABCD
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml

@@ -55,8 +55,14 @@ public class PublishingWorkflowController {
     }
 
     @GetMapping("/content")
-    public List<ContentResponse> list() {
-        return publishingWorkflowService.listAll();
+    public List<ContentResponse> list(
+            @RequestHeader(value = "X-Auth-Token", required = false) String token
+    ) {
+        UserAccount user = requestAuthorizationService.requireAuthenticated(token);
+        if (isPrivilegedPublishingRole(user.getRole())) {
+            return publishingWorkflowService.listAll();
+        }
+        return publishingWorkflowService.listByOwner(user.getUsername());
     }
 
     @PostMapping("/content/{contentId}/update")
@@ -141,16 +147,22 @@ public class PublishingWorkflowController {
     }
 
     @GetMapping("/content/{contentId}/versions")
-    public List<ContentVersionResponse> versions(@PathVariable Long contentId) {
+    public List<ContentVersionResponse> versions(
+            @PathVariable Long contentId,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token
+    ) {
+        requirePublishingReadAccess(contentId, token);
         return publishingWorkflowService.versions(contentId);
     }
 
     @GetMapping("/content/{contentId}/diff")
     public DiffResponse diff(
             @PathVariable Long contentId,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @RequestParam Integer leftVersion,
             @RequestParam Integer rightVersion
     ) {
+        requirePublishingReadAccess(contentId, token);
         return publishingWorkflowService.diff(contentId, leftVersion, rightVersion);
     }
 
@@ -165,8 +177,23 @@ public class PublishingWorkflowController {
     }
 
     @GetMapping("/content/{contentId}/audit")
-    public List<AuditLogResponse> audit(@PathVariable Long contentId) {
+    public List<AuditLogResponse> audit(
+            @PathVariable Long contentId,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token
+    ) {
+        requirePublishingReadAccess(contentId, token);
         return publishingWorkflowService.auditTrail(contentId);
+    }
+
+    private void requirePublishingReadAccess(Long contentId, String token) {
+        UserAccount user = requestAuthorizationService.requireAuthenticated(token);
+        if (isPrivilegedPublishingRole(user.getRole())) {
+            return;
+        }
+        String owner = publishingWorkflowService.contentOwner(contentId);
+        if (!owner.equalsIgnoreCase(user.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "content owner or privileged role required");
+        }
     }
 
     private boolean isPrivilegedPublishingRole(String role) {

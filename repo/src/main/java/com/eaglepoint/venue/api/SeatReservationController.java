@@ -47,7 +47,7 @@ public class SeatReservationController {
     @PostMapping("/seat-orders")
     @ResponseStatus(HttpStatus.CREATED)
     public SeatOrderResponse createSeatOrder(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody CreateSeatOrderRequest request
     ) {
         UserAccount user = requestAuthorizationService.requireAnyRole(
@@ -64,7 +64,7 @@ public class SeatReservationController {
 
     @PostMapping("/seat-orders/{orderId}/pay")
     public SeatOrderResponse markSeatOrderPaid(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @PathVariable Long orderId
     ) {
         UserAccount user = requestAuthorizationService.requireAnyRole(

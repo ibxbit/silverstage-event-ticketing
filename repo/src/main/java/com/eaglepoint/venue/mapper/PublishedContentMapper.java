@@ -13,6 +13,8 @@ public interface PublishedContentMapper {
 
     List<PublishedContent> findAll();
 
+    List<PublishedContent> findByCreatedBy(@Param("createdBy") String createdBy);
+
     int updateBodyAndVersion(
             @Param("id") Long id,
             @Param("title") String title,

@@ -33,6 +33,13 @@
         ORDER BY updated_at DESC, id DESC
     </select>
 
+    <select id="findByCreatedBy" parameterType="string" resultMap="PublishedContentMap">
+        SELECT id, title, body, state, current_version, created_by, published_at, created_at, updated_at
+        FROM published_content
+        WHERE LOWER(created_by) = LOWER(#{createdBy})
+        ORDER BY updated_at DESC, id DESC
+    </select>
+
     <update id="updateBodyAndVersion">
         UPDATE published_content
         SET title = #{title},

@@ -52,7 +52,7 @@ public class SecurityController {
     }
 
     @GetMapping("/menu")
-    public Map<String, Object> menu(@RequestHeader("X-Auth-Token") String token) {
+    public Map<String, Object> menu(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
         Map<String, Object> response = new HashMap<String, Object>();
         response.put("menus", accountSecurityService.visibleMenusByToken(token));
         return response;
@@ -60,20 +60,20 @@ public class SecurityController {
 
     @PostMapping("/verification")
     public UserIdentityVerification submitVerification(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody IdentityVerificationRequest request
     ) {
         return accountSecurityService.submitVerification(token, request);
     }
 
     @GetMapping("/verification/pending")
-    public List<UserIdentityVerification> pending(@RequestHeader("X-Auth-Token") String token) {
+    public List<UserIdentityVerification> pending(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
         return accountSecurityService.pendingVerifications(token);
     }
 
     @PatchMapping("/verification/{verificationId}")
     public UserIdentityVerification review(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @PathVariable Long verificationId,
             @Valid @RequestBody VerificationReviewRequest request
     ) {

@@ -34,7 +34,7 @@ class PublishingWorkflowIntegrationTest {
         registry.add("spring.datasource.username", () -> "sa");
         registry.add("spring.datasource.password", () -> "");
         registry.add("spring.sql.init.mode", () -> "always");
-        registry.add("app.security.aes-key", () -> "test-key-1234567890123456789012"); // 32 chars
+        registry.add("app.security.aes-key", () -> "test-key-material-1234567890-ABCD");
     }
 
     @BeforeEach

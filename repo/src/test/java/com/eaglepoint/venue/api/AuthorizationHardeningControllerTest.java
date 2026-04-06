@@ -2,6 +2,8 @@ package com.eaglepoint.venue.api;
 
 import com.eaglepoint.venue.api.dto.ContentResponse;
 import com.eaglepoint.venue.api.dto.CreateSeatOrderRequest;
+import com.eaglepoint.venue.api.dto.DiffResponse;
+import com.eaglepoint.venue.api.dto.ReservationResponse;
 import com.eaglepoint.venue.api.dto.SeatOrderResponse;
 import com.eaglepoint.venue.domain.UserAccount;
 import com.eaglepoint.venue.service.AccountSecurityService;
@@ -10,6 +12,7 @@ import com.eaglepoint.venue.service.ModerationService;
 import com.eaglepoint.venue.service.PublishingWorkflowService;
 import com.eaglepoint.venue.service.RequestAuthorizationService;
 import com.eaglepoint.venue.service.SeatReservationService;
+import com.eaglepoint.venue.service.TicketingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +52,8 @@ class AuthorizationHardeningControllerTest {
     private PublishingWorkflowService publishingWorkflowService;
     @Mock
     private SeatReservationService seatReservationService;
+    @Mock
+    private TicketingService ticketingService;
 
     private MockMvc mockMvc;
 
@@ -59,7 +64,8 @@ class AuthorizationHardeningControllerTest {
         FileManagementController fileManagementController = new FileManagementController(fileManagementService, requestAuthorizationService);
         PublishingWorkflowController publishingWorkflowController = new PublishingWorkflowController(publishingWorkflowService, requestAuthorizationService);
         SeatReservationController seatReservationController = new SeatReservationController(seatReservationService, requestAuthorizationService);
-        mockMvc = MockMvcBuilders.standaloneSetup(moderationController, fileManagementController, publishingWorkflowController, seatReservationController).build();
+        TicketingController ticketingController = new TicketingController(ticketingService, requestAuthorizationService);
+        mockMvc = MockMvcBuilders.standaloneSetup(moderationController, fileManagementController, publishingWorkflowController, seatReservationController, ticketingController).build();
     }
 
     @Test
@@ -171,7 +177,7 @@ class AuthorizationHardeningControllerTest {
         mockMvc.perform(post("/api/seat-orders")
                         .contentType("application/json")
                         .content(payload))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(seatReservationService);
     }
@@ -243,9 +249,138 @@ class AuthorizationHardeningControllerTest {
     @Test
     void seatOrderPay_withoutToken_returns401() throws Exception {
         mockMvc.perform(post("/api/seat-orders/10/pay"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(seatReservationService);
+    }
+
+    @Test
+    void ticketReservation_withoutToken_returns401() throws Exception {
+        String payload = "{"
+                + "\"ticketTypeId\":1,"
+                + "\"reservationCode\":\"RES-1\","
+                + "\"buyerReference\":\"forged\","
+                + "\"channel\":\"ONLINE_PORTAL\","
+                + "\"quantity\":1"
+                + "}";
+
+        mockMvc.perform(post("/api/tickets/reservations")
+                        .contentType("application/json")
+                        .content(payload))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(ticketingService);
+    }
+
+    @Test
+    void ticketReservation_overwritesForgedBuyerReferenceFromTokenUser() throws Exception {
+        UserAccount user = new UserAccount();
+        user.setUsername("senior_a");
+        user.setRole("SENIOR");
+        when(accountSecurityService.requireUserByToken("token-senior")).thenReturn(user);
+
+        ReservationResponse response = new ReservationResponse();
+        response.setReservationId(77L);
+        response.setReservationCode("RES-2");
+        response.setStatus("CONFIRMED");
+        when(ticketingService.reserveTickets(any(), any())).thenReturn(response);
+
+        String payload = "{"
+                + "\"ticketTypeId\":1,"
+                + "\"reservationCode\":\"RES-2\","
+                + "\"buyerReference\":\"forged\","
+                + "\"channel\":\"ONLINE_PORTAL\","
+                + "\"quantity\":1"
+                + "}";
+
+        mockMvc.perform(post("/api/tickets/reservations")
+                        .header("X-Auth-Token", "token-senior")
+                        .contentType("application/json")
+                        .content(payload))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<String> actorCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<com.eaglepoint.venue.api.dto.CreateReservationRequest> requestCaptor = ArgumentCaptor.forClass(com.eaglepoint.venue.api.dto.CreateReservationRequest.class);
+        verify(ticketingService).reserveTickets(actorCaptor.capture(), requestCaptor.capture());
+        assertEquals("senior_a", actorCaptor.getValue());
+        assertEquals("senior_a", requestCaptor.getValue().getBuyerReference());
+    }
+
+    @Test
+    void publishingReadEndpoints_withoutToken_return401() throws Exception {
+        mockMvc.perform(get("/api/publishing/content"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/versions"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/diff")
+                        .param("leftVersion", "1")
+                        .param("rightVersion", "2"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/publishing/content/100/audit"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void publishingReadEndpoints_nonOwnerNonPrivileged_return403() throws Exception {
+        UserAccount user = new UserAccount();
+        user.setUsername("user_a");
+        user.setRole("SENIOR");
+        when(accountSecurityService.requireUserByToken("token-user-a")).thenReturn(user);
+        when(publishingWorkflowService.contentOwner(100L)).thenReturn("owner_b");
+
+        mockMvc.perform(get("/api/publishing/content/100/versions")
+                        .header("X-Auth-Token", "token-user-a"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/publishing/content/100/diff")
+                        .header("X-Auth-Token", "token-user-a")
+                        .param("leftVersion", "1")
+                        .param("rightVersion", "2"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/publishing/content/100/audit")
+                        .header("X-Auth-Token", "token-user-a"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void publishingReadEndpoints_ownerOrPrivileged_canAccess() throws Exception {
+        UserAccount owner = new UserAccount();
+        owner.setUsername("owner_a");
+        owner.setRole("SENIOR");
+        when(accountSecurityService.requireUserByToken("token-owner")).thenReturn(owner);
+        when(publishingWorkflowService.contentOwner(100L)).thenReturn("owner_a");
+        when(publishingWorkflowService.versions(100L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/publishing/content/100/versions")
+                        .header("X-Auth-Token", "token-owner"))
+                .andExpect(status().isOk());
+
+        DiffResponse diffResponse = new DiffResponse();
+        diffResponse.setContentId(100L);
+        diffResponse.setLeftVersion(1);
+        diffResponse.setRightVersion(2);
+        diffResponse.setLeftLines(Collections.singletonList("left"));
+        diffResponse.setRightLines(Collections.singletonList("right"));
+        when(publishingWorkflowService.diff(100L, 1, 2)).thenReturn(diffResponse);
+        when(publishingWorkflowService.auditTrail(100L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/publishing/content/100/diff")
+                        .header("X-Auth-Token", "token-owner")
+                        .param("leftVersion", "1")
+                        .param("rightVersion", "2"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/publishing/content/100/audit")
+                        .header("X-Auth-Token", "token-owner"))
+                .andExpect(status().isOk());
+
+        UserAccount admin = new UserAccount();
+        admin.setUsername("admin_a");
+        admin.setRole("ORG_ADMIN");
+        when(accountSecurityService.requireUserByToken("token-admin")).thenReturn(admin);
+        when(publishingWorkflowService.listAll()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/publishing/content")
+                        .header("X-Auth-Token", "token-admin"))
+                .andExpect(status().isOk());
     }
 
     @Test

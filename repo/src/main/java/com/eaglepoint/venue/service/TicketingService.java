@@ -136,6 +136,7 @@ public class TicketingService {
 
     @Transactional
     public ReservationResponse reserveTickets(String actor, CreateReservationRequest request) {
+        String authenticatedBuyer = requireReservationActor(actor);
         String normalizedChannel = request.getChannel().trim().toUpperCase();
         validateChannel(normalizedChannel);
 
@@ -157,7 +158,7 @@ public class TicketingService {
         TicketReservation reservation = new TicketReservation();
         reservation.setTicketTypeId(ticketType.getId());
         reservation.setReservationCode(request.getReservationCode().trim().toUpperCase());
-        reservation.setBuyerReference(request.getBuyerReference().trim());
+        reservation.setBuyerReference(authenticatedBuyer);
         reservation.setChannel(normalizedChannel);
         reservation.setQuantity(request.getQuantity());
         reservation.setUnitPrice(unitPrice);
@@ -189,6 +190,14 @@ public class TicketingService {
         response.setTotalAmount(reservation.getTotalAmount());
         response.setStatus(reservation.getStatus());
         return response;
+    }
+
+    private String requireReservationActor(String actor) {
+        String value = clean(actor);
+        if (value.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "authenticated user is required");
+        }
+        return value;
     }
 
     private void validateTicketTypeRequest(CreateTicketTypeRequest request) {

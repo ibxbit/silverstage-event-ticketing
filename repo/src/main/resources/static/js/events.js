@@ -12,17 +12,25 @@
         const sessions = season.sessions || [];
         const sessionBlocks = sessions
           .map((session) => {
-            const zones = session.zones || [];
-            const zoneBlocks = zones
-              .map((zone) => {
-                const seats = zone.seats || [];
-                const seatBlocks = seats
-                  .map((seat) => `<li>${seat.seatNumber} (${seat.status})</li>`)
+            const stands = session.stands || [];
+            const standBlocks = stands
+              .map((stand) => {
+                const zones = stand.zones || [];
+                const zoneBlocks = zones
+                  .map((zone) => {
+                    const seats = zone.seats || [];
+                    const seatBlocks = seats
+                      .map(
+                        (seat) => `<li>${seat.seatNumber} (${seat.status})</li>`,
+                      )
+                      .join("");
+                    return `<li><strong>${zone.code}</strong> - ${zone.name} (cap: ${zone.capacity})<ul>${seatBlocks}</ul></li>`;
+                  })
                   .join("");
-                return `<li><strong>${zone.code}</strong> - ${zone.name} (cap: ${zone.capacity})<ul>${seatBlocks}</ul></li>`;
+                return `<li><strong>${stand.code}</strong> - ${stand.name}<ul>${zoneBlocks}</ul></li>`;
               })
               .join("");
-            return `<li>${session.title} (${session.startTime})<ul>${zoneBlocks}</ul></li>`;
+            return `<li>${session.title} (${session.startTime})<ul>${standBlocks}</ul></li>`;
           })
           .join("");
         return `<li><strong>${season.name}</strong><ul>${sessionBlocks}</ul></li>`;

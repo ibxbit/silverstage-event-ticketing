@@ -50,8 +50,32 @@ class AccountSecurityServiceTest {
                 userAccountMapper,
                 authSessionMapper,
                 userIdentityVerificationMapper,
-                "UnitTestAESKey01"
+                "UnitTestAESKeyMaterial-1234567890AB"
         );
+    }
+
+    @Test
+    void constructor_rejectsMissingOrWeakAesKey() {
+        assertThrows(IllegalStateException.class, () -> new AccountSecurityService(
+                userAccountMapper,
+                authSessionMapper,
+                userIdentityVerificationMapper,
+                ""
+        ));
+
+        assertThrows(IllegalStateException.class, () -> new AccountSecurityService(
+                userAccountMapper,
+                authSessionMapper,
+                userIdentityVerificationMapper,
+                "short-key"
+        ));
+
+        assertThrows(IllegalStateException.class, () -> new AccountSecurityService(
+                userAccountMapper,
+                authSessionMapper,
+                userIdentityVerificationMapper,
+                "0123456789ABCDEF0123456789ABCDEF"
+        ));
     }
 
     @Test

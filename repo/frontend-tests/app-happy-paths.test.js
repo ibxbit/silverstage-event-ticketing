@@ -262,3 +262,53 @@ test("seat reservation failure path shows out-of-quota alert message", () => {
     "Quota reached for selected channel. Choose another channel.",
   );
 });
+
+test("hierarchy renderer traverses stands zones and seats", () => {
+  $.getJSON = jest.fn((url) => {
+    if (url === "/api/events/1/hierarchy") {
+      return chainFromDoneFail((done) => {
+        done({
+          seasons: [
+            {
+              name: "Spring",
+              sessions: [
+                {
+                  id: 10,
+                  title: "Matinee",
+                  startTime: "2026-04-01T14:00:00",
+                  stands: [
+                    {
+                      code: "ST-A",
+                      name: "North Stand",
+                      zones: [
+                        {
+                          code: "Z-1",
+                          name: "Accessible Zone",
+                          capacity: 20,
+                          seats: [
+                            { seatNumber: "A-01", status: "AVAILABLE" },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+    }
+    if (url === "/api/events/1/ticket-types") {
+      return chainFromDoneFail((done) => done([]));
+    }
+    return chainFromDoneFail(null, (fail) => fail({}));
+  });
+
+  window.SilverStage.Events.loadHierarchy(1);
+
+  const html = $("#hierarchy-container").html();
+  expect(html).toContain("ST-A");
+  expect(html).toContain("Z-1");
+  expect(html).toContain("A-01 (AVAILABLE)");
+});

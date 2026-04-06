@@ -23,13 +23,16 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -49,7 +52,7 @@ public class AccountSecurityService {
         this.userAccountMapper = userAccountMapper;
         this.authSessionMapper = authSessionMapper;
         this.userIdentityVerificationMapper = userIdentityVerificationMapper;
-        this.aesKey = Arrays.copyOf(key.getBytes(StandardCharsets.UTF_8), 16);
+        this.aesKey = deriveAesKey(validateAesKey(key));
     }
 
     @Transactional
@@ -268,5 +271,41 @@ public class AccountSecurityService {
 
     private String clean(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String validateAesKey(String key) {
+        String value = clean(key);
+        if (value.isEmpty()) {
+            throw new IllegalStateException("app.security.aes-key is required");
+        }
+        if (value.length() < 32) {
+            throw new IllegalStateException("app.security.aes-key must be at least 32 characters");
+        }
+        if (isKnownWeakAesKey(value)) {
+            throw new IllegalStateException("app.security.aes-key must not use a default or placeholder value");
+        }
+        Set<Character> distinct = new HashSet<Character>();
+        for (char character : value.toCharArray()) {
+            distinct.add(character);
+        }
+        if (distinct.size() < 8) {
+            throw new IllegalStateException("app.security.aes-key is too weak");
+        }
+        return value;
+    }
+
+    private boolean isKnownWeakAesKey(String value) {
+        return "0123456789ABCDEF0123456789ABCDEF".equals(value)
+                || "LocalAESKey12345".equals(value)
+                || "YOUR_32_CHAR_KEY_HERE".equalsIgnoreCase(value);
+    }
+
+    private byte[] deriveAesKey(String secret) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(secret.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is required for AES key derivation", ex);
+        }
     }
 }

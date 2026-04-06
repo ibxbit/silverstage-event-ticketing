@@ -12,6 +12,7 @@ buildNumber.properties
 
 # Log and persistence ignore
 logs/
+logs/*.log
 local-storage/
 *.log
 

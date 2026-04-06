@@ -13,8 +13,16 @@
     };
   }
 
+  function getJsonWithAuth(url) {
+    return $.ajax({
+      url,
+      method: "GET",
+      headers: SilverStage.Core.authHeaders(),
+    });
+  }
+
   function loadPublishedContent() {
-    $.getJSON("/api/publishing/content")
+    getJsonWithAuth("/api/publishing/content")
       .done((items) => {
         if (!items.length) {
           $("#publishing-list").html("No content items found.");
@@ -217,7 +225,7 @@
       const leftVersion = Number($("#workflow-left-version").val());
       const rightVersion = Number($("#workflow-right-version").val());
 
-      $.getJSON(
+      getJsonWithAuth(
         `/api/publishing/content/${contentId}/diff?leftVersion=${leftVersion}&rightVersion=${rightVersion}`,
       )
         .done((diff) => {
@@ -237,7 +245,7 @@
     });
 
     $("#show-audit").on("click", function () {
-      $.getJSON(`/api/publishing/content/${workflowContentId()}/audit`)
+      getJsonWithAuth(`/api/publishing/content/${workflowContentId()}/audit`)
         .done((items) => {
           if (!items.length) {
             $("#publishing-output").text("No audit log entries.");

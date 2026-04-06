@@ -6,7 +6,7 @@ import com.eaglepoint.venue.api.dto.ReservationResponse;
 import com.eaglepoint.venue.api.dto.TicketTypeResponse;
 import com.eaglepoint.venue.common.SecurityConstants;
 import com.eaglepoint.venue.domain.UserAccount;
-import com.eaglepoint.venue.service.AccountSecurityService;
+import com.eaglepoint.venue.service.RequestAuthorizationService;
 import com.eaglepoint.venue.service.TicketingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,22 +26,21 @@ import java.util.List;
 public class TicketingController {
 
     private final TicketingService ticketingService;
-    private final AccountSecurityService accountSecurityService;
+    private final RequestAuthorizationService requestAuthorizationService;
 
-    public TicketingController(TicketingService ticketingService, AccountSecurityService accountSecurityService) {
+    public TicketingController(TicketingService ticketingService, RequestAuthorizationService requestAuthorizationService) {
         this.ticketingService = ticketingService;
-        this.accountSecurityService = accountSecurityService;
+        this.requestAuthorizationService = requestAuthorizationService;
     }
 
     @PostMapping("/events/{eventId}/ticket-types")
     @ResponseStatus(HttpStatus.CREATED)
     public TicketTypeResponse createTicketType(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @PathVariable Long eventId,
             @Valid @RequestBody CreateTicketTypeRequest request
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        UserAccount user = requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return ticketingService.createTicketType(user.getUsername(), eventId, request);
     }
 
@@ -53,10 +52,11 @@ public class TicketingController {
     @PostMapping("/tickets/reservations")
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationResponse reserveTickets(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody CreateReservationRequest request
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
+        UserAccount user = requestAuthorizationService.requireAuthenticated(token);
+        request.setBuyerReference(user.getUsername());
         return ticketingService.reserveTickets(user.getUsername(), request);
     }
 }

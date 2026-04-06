@@ -40,7 +40,7 @@ public class PaymentController {
     @PostMapping("/tenders")
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentTransaction recordTender(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody PaymentTenderRequest request
     ) {
         UserAccount user = accountSecurityService.requireUserByToken(token);
@@ -50,7 +50,7 @@ public class PaymentController {
 
     @PostMapping("/callbacks")
     public Map<String, Object> callback(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @RequestParam String transactionRef,
             @RequestParam String gatewayBatchRef,
             @RequestParam BigDecimal settledAmount,
@@ -65,7 +65,7 @@ public class PaymentController {
 
     @PostMapping("/settlements/import")
     public ReconciliationReportResponse importSettlement(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @RequestParam("file") MultipartFile file
     ) {
         UserAccount user = accountSecurityService.requireUserByToken(token);
@@ -76,7 +76,7 @@ public class PaymentController {
     @PostMapping("/refunds")
     @ResponseStatus(HttpStatus.CREATED)
     public RefundTransaction refund(
-            @RequestHeader("X-Auth-Token") String token,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody RefundRequest request
     ) {
         UserAccount user = accountSecurityService.requireUserByToken(token);
@@ -85,14 +85,14 @@ public class PaymentController {
     }
 
     @GetMapping("/reconciliation/report")
-    public ReconciliationReportResponse report(@RequestHeader("X-Auth-Token") String token) {
+    public ReconciliationReportResponse report(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
         UserAccount user = accountSecurityService.requireUserByToken(token);
         accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.reconciliationReport();
     }
 
     @GetMapping("/reconciliation/traces")
-    public List<OperationTrace> traces(@RequestHeader("X-Auth-Token") String token) {
+    public List<OperationTrace> traces(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
         UserAccount user = accountSecurityService.requireUserByToken(token);
         accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.traces();
