@@ -163,6 +163,24 @@ class PublishingWorkflowServiceTest {
     }
 
     @Test
+    void updateDraft_afterPublish_throwsConflict() {
+        PublishedContent content = new PublishedContent();
+        content.setId(1L);
+        content.setState(ContentState.PUBLISH.value());
+        content.setCreatedBy("author");
+        when(publishedContentMapper.findById(1L)).thenReturn(content);
+
+        UpdateContentRequest request = new UpdateContentRequest();
+        request.setTitle("Updated");
+        request.setBody("Updated body");
+        request.setSummary("Update");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> publishingWorkflowService.updateDraft(1L, "author", request));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+    }
+
+    @Test
     void rollback_rejectsVersionsOutsideThirtyDayRetention() {
         PublishedContent published = new PublishedContent();
         published.setId(7L);

@@ -204,6 +204,20 @@ class PaymentReconciliationServiceTest {
     }
 
     @Test
+    void processCallback_duplicateCallback_returnsFalse() {
+        // When a settlement callback already exists for this transactionRef
+        SettlementCallback existing = new SettlementCallback();
+        existing.setTransactionRef("TXN-DUP");
+        existing.setSettledAmount(new BigDecimal("100.00"));
+        existing.setCallbackStatus("SETTLED");
+        when(settlementCallbackMapper.findByTransactionRef("TXN-DUP")).thenReturn(existing);
+
+        boolean result = paymentReconciliationService.processCallback(
+            "system", "TXN-DUP", "BATCH-1", new BigDecimal("100.00"), "SETTLED", "gateway");
+        assertFalse(result);
+    }
+
+    @Test
     void reconciliationReport_flagsAmountMismatchException() {
         PaymentTransaction tx = new PaymentTransaction();
         tx.setId(66L);

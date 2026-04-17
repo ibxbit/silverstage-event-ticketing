@@ -172,4 +172,44 @@ class ModerationServiceTest {
         verify(userNotificationMapper).findById(13L);
         verify(userNotificationMapper, never()).markAsRead(13L);
     }
+
+    @Test
+    void markNotificationRead_nonOwnerNonAdmin_throwsForbidden() {
+        // The service calls userNotificationMapper.markAsReadByUsername which returns 0
+        // for non-owners, triggering FORBIDDEN
+        when(userNotificationMapper.markAsReadByUsername(100L, "other_user")).thenReturn(0);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> moderationService.markNotificationRead("other_user", SecurityConstants.ROLE_SENIOR, 100L));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
+    }
+
+    @Test
+    void markNotificationRead_adminCanReadAnyNotification() {
+        UserNotification notif = new UserNotification();
+        notif.setId(101L);
+        notif.setUsername("user_a");
+        when(userNotificationMapper.findById(101L)).thenReturn(notif);
+
+        moderationService.markNotificationRead("admin_user", SecurityConstants.ROLE_ORG_ADMIN, 101L);
+        verify(userNotificationMapper).markAsRead(101L);
+    }
+
+    @Test
+    void markNotificationRead_adminWithNonexistentNotification_throws404() {
+        when(userNotificationMapper.findById(999L)).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> moderationService.markNotificationRead("admin_user", SecurityConstants.ROLE_PLATFORM_ADMIN, 999L));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+    }
+
+    @Test
+    void markNotificationRead_ownerCanReadOwnNotification() {
+        when(userNotificationMapper.markAsReadByUsername(102L, "user_a")).thenReturn(1);
+
+        moderationService.markNotificationRead("user_a", SecurityConstants.ROLE_SENIOR, 102L);
+        verify(userNotificationMapper).markAsReadByUsername(102L, "user_a");
+        verify(userNotificationMapper, never()).markAsRead(102L);
+    }
 }

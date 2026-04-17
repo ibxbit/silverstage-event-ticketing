@@ -223,6 +223,55 @@ class SeatReservationServiceTest {
         verify(ticketOrderMapper).markPaid(302L);
     }
 
+    @Test
+    void markOrderPaid_notFoundOrder_throws404() {
+        when(ticketOrderMapper.findById(999L)).thenReturn(null);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> seatReservationService.markOrderPaid(999L, "user", "SENIOR"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+    }
+
+    @Test
+    void markOrderPaid_alreadyPaidOrder_throwsConflict() {
+        TicketOrder order = new TicketOrder();
+        order.setId(400L);
+        order.setBuyerReference("buyer");
+        order.setStatus("PAID");
+        when(ticketOrderMapper.findById(400L)).thenReturn(order);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> seatReservationService.markOrderPaid(400L, "buyer", "SENIOR"));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+    }
+
+    @Test
+    void markOrderPaid_cancelledOrder_throwsConflict() {
+        TicketOrder order = new TicketOrder();
+        order.setId(401L);
+        order.setBuyerReference("buyer");
+        order.setStatus("CANCELLED");
+        when(ticketOrderMapper.findById(401L)).thenReturn(order);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> seatReservationService.markOrderPaid(401L, "buyer", "SENIOR"));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+    }
+
+    @Test
+    void markOrderPaid_expiredHold_throwsConflict() {
+        TicketOrder order = new TicketOrder();
+        order.setId(402L);
+        order.setBuyerReference("buyer");
+        order.setStatus("UNPAID");
+        order.setHoldExpiresAt(LocalDateTime.now().minusMinutes(5));
+        when(ticketOrderMapper.findById(402L)).thenReturn(order);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> seatReservationService.markOrderPaid(402L, "buyer", "SENIOR"));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+        assertTrue(ex.getReason().contains("expired"));
+    }
+
     private Boolean reserveWithLatch(CreateSeatOrderRequest request, CountDownLatch ready, CountDownLatch start) {
         try {
             ready.countDown();

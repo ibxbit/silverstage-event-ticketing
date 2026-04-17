@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "test": "npm run test:frontend",
-    "test:frontend": "jest --runInBand"
+    "test:frontend": "jest --runInBand",
+    "test:e2e": "npx playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.45.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jquery": "^3.7.1"

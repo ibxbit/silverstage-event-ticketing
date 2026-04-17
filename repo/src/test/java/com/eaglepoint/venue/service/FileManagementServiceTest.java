@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -205,6 +206,19 @@ class FileManagementServiceTest {
                 )
         );
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void resolveDownload_expiredToken_throws404() {
+        // findValidByToken returns null when the token is expired or not found
+        when(managedDownloadLinkMapper.findValidByToken(eq("expired-token"), any(java.time.LocalDateTime.class)))
+            .thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> fileManagementService.resolveDownload(SecurityConstants.ROLE_SERVICE_STAFF, "expired-token")
+        );
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
     }
 
     @Test

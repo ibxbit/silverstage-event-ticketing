@@ -10,7 +10,7 @@ SILVERSTAGE_BASE_URL="${SILVERSTAGE_BASE_URL:-http://localhost:8080}"
 
 if command -v javac >/dev/null 2>&1; then
 	mkdir -p target/api-functional-tests
-	javac -d target/api-functional-tests API_tests/ApiFunctionalTests.java
+	javac -d target/api-functional-tests API_tests/*.java
 	SPRING_PROFILES_ACTIVE="$SPRING_PROFILES_ACTIVE" SILVERSTAGE_BASE_URL="$SILVERSTAGE_BASE_URL" \
 		java -cp target/api-functional-tests ApiFunctionalTests
 	exit 0
@@ -28,4 +28,4 @@ docker run --rm \
 	-e SPRING_PROFILES_ACTIVE="$SPRING_PROFILES_ACTIVE" \
 	-e SILVERSTAGE_BASE_URL="${SILVERSTAGE_BASE_URL/http:\/\/localhost/http:\/\/host.docker.internal}" \
 	maven:3.9.9-eclipse-temurin-17 \
-	bash -c "mkdir -p target/api-functional-tests && javac -d target/api-functional-tests API_tests/ApiFunctionalTests.java && java -cp target/api-functional-tests ApiFunctionalTests"
+	bash -c "mkdir -p target/api-functional-tests && javac -d target/api-functional-tests API_tests/*.java && java -cp target/api-functional-tests ApiFunctionalTests"

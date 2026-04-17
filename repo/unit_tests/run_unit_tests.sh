@@ -13,7 +13,7 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 MAVEN_LOG="target/unit-test-maven.log"
-if ! env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.service.*Test' test >"$MAVEN_LOG" 2>&1; then
+if ! env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.service.*Test,com.eaglepoint.venue.api.*Test' test >"$MAVEN_LOG" 2>&1; then
   if grep -q "org.codehaus.plexus.classworlds.launcher.Launcher" "$MAVEN_LOG"; then
     echo "Maven bootstrap failed (classworlds launcher not found). See $MAVEN_LOG"
   else
@@ -27,7 +27,7 @@ failures=0
 errors=0
 skipped=0
 
-for file in target/surefire-reports/TEST-com.eaglepoint.venue.service.*.xml; do
+for file in target/surefire-reports/TEST-com.eaglepoint.venue.service.*.xml target/surefire-reports/TEST-com.eaglepoint.venue.api.*.xml; do
   [[ -f "$file" ]] || continue
   tests_in_file=$(grep -m1 -o 'tests="[0-9]*"' "$file" | cut -d'"' -f2)
   failures_in_file=$(grep -m1 -o 'failures="[0-9]*"' "$file" | cut -d'"' -f2)

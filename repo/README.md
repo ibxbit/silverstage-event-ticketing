@@ -1,8 +1,10 @@
-# Senior Venue Platform (Parts 1-8)
+# fullstack
 
-Core architecture for an offline-first senior community venue ticketing platform built with Spring MVC REST APIs, MyBatis, MySQL, and a local jQuery portal.
+# Senior Venue Platform
 
-## Implemented scope
+Offline-first senior community venue ticketing platform built with Spring MVC REST APIs, MyBatis, MySQL, and a jQuery web portal served by the same application.
+
+## Implemented Scope
 
 - Spring MVC REST endpoints for events and full hierarchy retrieval.
 - Structured ticket type setup with tiered pricing, visibility scopes, and labeled sale windows.
@@ -12,49 +14,36 @@ Core architecture for an offline-first senior community venue ticketing platform
 - 15-minute seat hold release and 30-minute unpaid auto-cancel with inventory return via local scheduler.
 - Discovery APIs with type-ahead suggestions, result highlighting, deduplication, and multi-filter search.
 - Paginated browsing endpoints for seasons, sessions, and community announcements.
-- Secure local file management with folder organization, tags, and full document version history.
-- Expiring download links (default 72 hours) and role-based file access for `SERVICE_STAFF`/`ORG_ADMIN`.
+- Secure file management with folder organization, tags, and full document version history.
+- Expiring download links (default 72 hours) and role-based file access for `SERVICE_STAFF` and `ORG_ADMIN`.
 - Content reporting with optional evidence attachments for any user.
-- Moderator review flow with penalties: `MUTE_24H`, `POST_RESTRICT_7D`, `PERMANENT_BAN`, plus clear user notifications.
+- Moderator review flow with penalties: `MUTE_24H`, `POST_RESTRICT_7D`, `PERMANENT_BAN`.
 - Publishing workflow states: `DRAFT -> SUBMISSION -> REVIEW -> PUBLISH`.
-- Post-publish corrections gated by appeal approval, side-by-side version diff, rollback within 30 days, and full audit trail.
+- Post-publish corrections gated by appeal approval, version diff, rollback within 30 days, and audit trail.
 - RBAC-enabled account security with local login, lockout policy, and role-based menu/API authorization.
 - Offline real-name verification with AES-encrypted ID storage and masked display.
-- Payment tender recording, settlement import/callback idempotency, refunds, revenue sharing, reconciliation exceptions, and operation traces.
-- MyBatis mapper + XML data access layer.
-- Local MySQL schema for the hierarchy model: `event -> season -> session -> stand -> zone -> seat`.
-- Local SQL bootstrap scripts (`schema.sql`, `data.sql`) for on-prem deployment.
-- Local file-based application logging under `logs/`.
-- jQuery-powered web portal served from the same application (`/`).
+- Payment tender recording, settlement import/callback idempotency, refunds, reconciliation exceptions, and operation traces.
 
-## Start Command (How to Run)
+## Startup Instructions
 
-Run the service directly with Maven:
+The application must be started with Docker Compose.
+
+1. Create `.env` from the provided template.
+2. Start the full stack:
 
 ```bash
-mvn spring-boot:run
+docker-compose up --build
 ```
+
+3. Wait for the app container to expose port `8080` and the MySQL container to become healthy.
 
 ## Configuration
 
-The application fails fast at startup if required secrets are missing or weak.
+All runtime configuration is containerized through Docker Compose and environment variables.
 
-Required environment variables:
+Required values are defined in `repo/.env.example`:
 
-- `SPRING_DATASOURCE_URL`: JDBC URL for the MySQL database (e.g., `jdbc:mysql://localhost:3306/senior_venue_platform`)
-- `SPRING_DATASOURCE_USERNAME`: Database username
-- `SPRING_DATASOURCE_PASSWORD`: Database password
-- `APP_SECURITY_AES_KEY`: AES key with at least 32 characters (default/placeholder values are rejected)
-
-Docker profile variables:
-
-- `MYSQL_ROOT_PASSWORD`
-- `MYSQL_USER`
-- `MYSQL_PASSWORD`
-
-A sample `.env` template is provided in the repository root as `.env.example`:
-
-```
+```env
 MYSQL_ROOT_PASSWORD=
 MYSQL_USER=
 MYSQL_PASSWORD=
@@ -64,91 +53,88 @@ SPRING_DATASOURCE_PASSWORD=
 APP_SECURITY_AES_KEY=YOUR_32_CHAR_KEY_HERE
 ```
 
-Copy `.env.example` to `.env` and fill in the appropriate values before running the application.
+The application fails fast if required secrets are missing or weak.
 
-## Service Address (Services List)
+## Access Method
 
-- Application API + Web Portal: `http://localhost:8080`
-- MySQL (for local/offline persistence): `localhost:3306`
+- Web portal: `http://localhost:8080/`
+- API base URL: `http://localhost:8080`
+- MySQL: `localhost:3306`
 
-## Verification method
+## Verification Method
 
-Primary verification is the unified one-click runner:
+Use the running Dockerized stack and verify both API and UI behavior.
 
-```bash
-bash ./run_tests.sh
-```
-
-Prerequisites for the one-click runner:
-
-- Maven available in `PATH`
-- Node.js/npm (for frontend Jest tests)
-- JDK 17+ (`javac`) for local API functional test execution
-- Docker is NOT required for local testing if JDK 17+ is present. It is only used for containerized deployment or as a fallback for API tests if a local Java toolchain is unavailable.
-
-The runner executes in order:
-
-- backend unit tests from `unit_tests/` (service-layer suite via Maven)
-- frontend Jest tests (`npm test`)
-- API functional tests from `API_tests/` against live HTTP endpoints (`javac` local path first, Docker fallback)
-
-It prints a single summary with total/passed/failed counts across all suites.
-
-Optional direct entry points:
-
-```bash
-bash ./unit_tests/run_unit_tests.sh
-bash ./API_tests/run_api_tests.sh
-npm test
-```
-
-`API_tests/run_api_tests.sh` behavior:
-
-- uses local `javac` + `java` when available
-- falls back to Docker (`maven:3.9.9-eclipse-temurin-17`) when local Java toolchain is unavailable
-
-1. Confirm app is reachable:
+1. Confirm the API is reachable:
 
 ```bash
 curl http://localhost:8080/api/events
 ```
 
-2. Register and login (RBAC + local auth):
+2. Open the web portal at `http://localhost:8080/`.
 
-```bash
-curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d "{\"username\":\"senior_demo\",\"password\":\"Passw0rd!23\",\"role\":\"SENIOR\"}"
-curl -X POST http://localhost:8080/api/security/login -H "Content-Type: application/json" -d "{\"username\":\"senior_demo\",\"password\":\"Passw0rd!23\"}"
-```
+3. Use the portal login/registration panel to create an account and confirm:
+- the login banner reports success
+- the event list loads
+- auth-gated sections appear only for allowed roles
 
-3. Verify payment reconciliation endpoint (with an admin token from login response):
-
-```bash
-curl http://localhost:8080/api/payments/reconciliation/report -H "X-Auth-Token: <TOKEN>"
-```
-
-4. Run unit tests:
-
-```bash
-mvn test
-```
-
-5. Run frontend happy-path tests (login + seat reservation UI):
-
-```bash
-npm install
-npm run test:frontend
-```
-
-6. Verify seat-order auth and moderation ownership controls:
+4. Verify core API auth behavior with curl:
 
 ```bash
 curl -X POST http://localhost:8080/api/seat-orders -H "Content-Type: application/json" -d '{"eventId":1,"sessionId":1,"ticketTypeId":1,"orderCode":"SO-DEMO","buyerReference":"forged","channel":"ONLINE_PORTAL","seatIds":[1]}'
 curl -X PATCH http://localhost:8080/api/moderation/notifications/1/read
 ```
 
-Both requests should return `401` without `X-Auth-Token`.
+Expected result:
+- both requests return `401 Unauthorized` without `X-Auth-Token`
+- requests with a valid token but insufficient role or ownership return `403 Forbidden`
 
-Requests with a valid token but insufficient role/ownership return `403`.
+5. Verify an authenticated flow:
+
+```bash
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"senior_demo","password":"Passw0rd!23","role":"SENIOR"}'
+curl -X POST http://localhost:8080/api/security/login -H "Content-Type: application/json" -d '{"username":"senior_demo","password":"Passw0rd!23"}'
+```
+
+Use the returned token to call another protected endpoint, for example:
+
+```bash
+curl http://localhost:8080/api/security/menu -H "X-Auth-Token: <TOKEN>"
+```
+
+## Authentication And Demo Credentials
+
+Authentication is required for protected workflows.
+
+There are no pre-seeded demo credentials documented for this repository.
+Use the self-registration endpoint or portal registration UI to create test accounts for each role.
+
+Role creation examples:
+
+```bash
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"senior_demo","password":"Passw0rd!23","role":"SENIOR"}'
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"family_demo","password":"Passw0rd!23","role":"FAMILY_MEMBER"}'
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"staff_demo","password":"Passw0rd!23","role":"SERVICE_STAFF"}'
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"org_admin_demo","password":"Passw0rd!23","role":"ORG_ADMIN"}'
+curl -X POST http://localhost:8080/api/security/accounts -H "Content-Type: application/json" -d '{"username":"platform_admin_demo","password":"Passw0rd!23","role":"PLATFORM_ADMIN"}'
+```
+
+Credential matrix for verification:
+
+| Role | Username | Password |
+|---|---|---|
+| `SENIOR` | `senior_demo` | `Passw0rd!23` |
+| `FAMILY_MEMBER` | `family_demo` | `Passw0rd!23` |
+| `SERVICE_STAFF` | `staff_demo` | `Passw0rd!23` |
+| `ORG_ADMIN` | `org_admin_demo` | `Passw0rd!23` |
+| `PLATFORM_ADMIN` | `platform_admin_demo` | `Passw0rd!23` |
+
+## Testing Notes
+
+- Backend HTTP coverage is implemented through Spring integration tests and external API functional tests.
+- Frontend unit coverage is implemented with Jest against the browser modules in `src/main/resources/static/js/`.
+- Browser E2E coverage is implemented with Playwright in `repo/e2e-tests/`.
+- This README does not require local package-manager or runtime installation steps to start the application.
 
 ## Authorization model (security hardening)
 
@@ -172,7 +158,7 @@ Requests with a valid token but insufficient role/ownership return `403`.
   - non-privileged users can read only their own publishing items/details (versions/diff/audit)
 - Payment callback idempotency records reconciliation anomalies when duplicate callbacks conflict on amount/status.
 
-## API contract updates
+## API Contract Updates
 
 - `POST /api/security/accounts` now returns a safe registration payload (`id`, `username`, `role`, `active`) and never exposes `passwordHash`, failed attempts, or lockout internals.
 - Moderation, publishing, and file-management privileged endpoints now require `X-Auth-Token`.
@@ -184,7 +170,7 @@ Requests with a valid token but insufficient role/ownership return `403`.
 - `POST /api/publishing/content/{contentId}/rollback` requires privileged role.
 - `GET /api/publishing/content`, `GET /api/publishing/content/{contentId}/versions`, `GET /api/publishing/content/{contentId}/diff`, and `GET /api/publishing/content/{contentId}/audit` require `X-Auth-Token` and enforce owner/privileged-role authorization.
 
-## File upload guardrails
+## File Upload Guardrails
 
 - File management uploads enforce content-type allowlist and max size (`app.files.allowed-content-types`, `app.files.max-upload-bytes`).
 - Moderation evidence uploads enforce content-type allowlist and max size (`app.moderation.allowed-evidence-content-types`, `app.moderation.max-evidence-bytes`).
