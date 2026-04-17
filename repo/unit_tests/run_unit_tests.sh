@@ -13,13 +13,15 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 MAVEN_LOG="target/unit-test-maven.log"
-if ! env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.service.*Test,com.eaglepoint.venue.api.*Test' test >"$MAVEN_LOG" 2>&1; then
+MAVEN_EXIT=0
+env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.service.*Test,com.eaglepoint.venue.api.*Test' test >"$MAVEN_LOG" 2>&1 || MAVEN_EXIT=$?
+if [[ "$MAVEN_EXIT" -ne 0 ]]; then
   if grep -q "org.codehaus.plexus.classworlds.launcher.Launcher" "$MAVEN_LOG"; then
     echo "Maven bootstrap failed (classworlds launcher not found). See $MAVEN_LOG"
-  else
-    echo "Backend unit test Maven execution failed. See $MAVEN_LOG"
+    exit 1
   fi
-  exit 1
+  # Keep going so we can still report counts from whatever Surefire produced.
+  echo "Backend unit test Maven reported failures. See $MAVEN_LOG"
 fi
 
 total=0
@@ -58,6 +60,6 @@ passed=$((total - failed - skipped))
 
 echo "backend_unit total=$total passed=$passed failed=$failed skipped=$skipped"
 
-if [[ "$failed" -gt 0 ]]; then
+if [[ "$failed" -gt 0 || "$MAVEN_EXIT" -ne 0 ]]; then
   exit 1
 fi

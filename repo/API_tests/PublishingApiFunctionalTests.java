@@ -98,20 +98,21 @@ public final class PublishingApiFunctionalTests {
     }
 
     private static long testRequestAppeal(String token, long contentId) throws Exception {
-        String body = "{\"reason\":\"Appeal reason for API functional test\"}";
+        String body = "{\"justification\":\"Appeal reason for API functional test\"}";
         HttpResponse<String> resp = ApiFunctionalTestHelper.request(
             "POST", "/api/publishing/content/" + contentId + "/appeals", body,
             Map.of("Content-Type", "application/json", "X-Auth-Token", token)
         );
         ApiFunctionalTestHelper.requireStatus(resp, 200, 201);
-        if (!resp.body().contains("\"appealId\"")) {
-            throw new IllegalStateException("appeal response missing appealId: " + resp.body());
+        String idKey = resp.body().contains("\"appealId\"") ? "appealId" : "id";
+        if (!resp.body().contains("\"" + idKey + "\"")) {
+            throw new IllegalStateException("appeal response missing id: " + resp.body());
         }
-        return ApiFunctionalTestHelper.extractFirstLong(resp.body(), "appealId");
+        return ApiFunctionalTestHelper.extractFirstLong(resp.body(), idKey);
     }
 
     private static void testDecideAppeal(String adminToken, long appealId) throws Exception {
-        String body = "{\"decision\":\"APPROVED\",\"note\":\"Approved by API functional test\"}";
+        String body = "{\"status\":\"APPROVED\",\"reviewNotes\":\"Approved by API functional test\"}";
         HttpResponse<String> resp = ApiFunctionalTestHelper.request(
             "POST", "/api/publishing/appeals/" + appealId + "/decision", body,
             Map.of("Content-Type", "application/json", "X-Auth-Token", adminToken)

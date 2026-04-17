@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn --version)",
+      "Bash(bash unit_tests/run_unit_tests.sh)",
+      "Bash(xargs grep *)",
+      "Bash(env -u CLASSPATH mvn -q -Dtest='com.eaglepoint.venue.api.AuthorizationHardeningControllerTest,com.eaglepoint.venue.api.SecurityControllerTest' test)",
+      "Bash(env -u CLASSPATH mvn -Dtest='com.eaglepoint.venue.api.AuthorizationHardeningControllerTest,com.eaglepoint.venue.api.SecurityControllerTest' test)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(bash run_tests.sh)",
+      "Bash(netstat -ano)",
+      "Bash(curl -sf http://localhost:8080/api/events)",
+      "Bash(curl -sv http://localhost:8080/)",
+      "Bash(curl -s http://localhost:8080/ -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:8080/api/events -o /tmp/events.json -w \"%{http_code}\\\\n\")",
+      "Read(//tmp/**)",
+      "Bash(tasklist)",
+      "Bash(wmic process *)",
+      "Bash(powershell *)",
+      "Bash(API_PORT=18080 bash run_tests.sh)",
+      "Bash(awk '{print $3}')",
+      "Bash(env -u CLASSPATH mvn -Dtest='com.eaglepoint.venue.service.PaymentReconciliationIntegrationTest' test)",
+      "Bash(npx jest *)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

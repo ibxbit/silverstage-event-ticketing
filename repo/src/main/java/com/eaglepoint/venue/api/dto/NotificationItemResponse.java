@@ -3,18 +3,18 @@ package com.eaglepoint.venue.api.dto;
 import java.time.LocalDateTime;
 
 public class NotificationItemResponse {
-    private Long id;
+    private Long notificationId;
     private String message;
     private String type;
     private String readFlag;
     private LocalDateTime createdAt;
 
-    public Long getId() {
-        return id;
+    public Long getNotificationId() {
+        return notificationId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNotificationId(Long notificationId) {
+        this.notificationId = notificationId;
     }
 
     public String getMessage() {

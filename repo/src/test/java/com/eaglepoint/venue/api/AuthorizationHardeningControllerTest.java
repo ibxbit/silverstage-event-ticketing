@@ -9,6 +9,7 @@ import com.eaglepoint.venue.domain.UserAccount;
 import com.eaglepoint.venue.service.AccountSecurityService;
 import com.eaglepoint.venue.service.FileManagementService;
 import com.eaglepoint.venue.service.ModerationService;
+import com.eaglepoint.venue.service.PaymentReconciliationService;
 import com.eaglepoint.venue.service.PublishingWorkflowService;
 import com.eaglepoint.venue.service.RequestAuthorizationService;
 import com.eaglepoint.venue.service.SeatReservationService;
@@ -55,6 +56,8 @@ class AuthorizationHardeningControllerTest {
     private SeatReservationService seatReservationService;
     @Mock
     private TicketingService ticketingService;
+    @Mock
+    private PaymentReconciliationService paymentReconciliationService;
 
     private MockMvc mockMvc;
 
@@ -66,7 +69,8 @@ class AuthorizationHardeningControllerTest {
         PublishingWorkflowController publishingWorkflowController = new PublishingWorkflowController(publishingWorkflowService, requestAuthorizationService);
         SeatReservationController seatReservationController = new SeatReservationController(seatReservationService, requestAuthorizationService);
         TicketingController ticketingController = new TicketingController(ticketingService, requestAuthorizationService);
-        mockMvc = MockMvcBuilders.standaloneSetup(moderationController, fileManagementController, publishingWorkflowController, seatReservationController, ticketingController).build();
+        PaymentController paymentController = new PaymentController(paymentReconciliationService, requestAuthorizationService);
+        mockMvc = MockMvcBuilders.standaloneSetup(moderationController, fileManagementController, publishingWorkflowController, seatReservationController, ticketingController, paymentController).build();
     }
 
     @Test
@@ -517,7 +521,8 @@ class AuthorizationHardeningControllerTest {
 
     @Test
     void paymentWriteEndpoints_withoutToken_return401() throws Exception {
-        mockMvc.perform(post("/api/payments/tenders").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isUnauthorized());
+        String tenderBody = "{\"transactionRef\":\"T1\",\"tenderType\":\"CASH\",\"amount\":10.00,\"merchantCode\":\"M1\"}";
+        mockMvc.perform(post("/api/payments/tenders").contentType(MediaType.APPLICATION_JSON).content(tenderBody)).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/payments/callbacks")
                         .param("transactionRef", "T1")
                         .param("gatewayBatchRef", "B1")
@@ -526,7 +531,8 @@ class AuthorizationHardeningControllerTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(multipart("/api/payments/settlements/import").file(new MockMultipartFile("file", "test.csv", "text/csv", "test".getBytes())))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(post("/api/payments/refunds").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isUnauthorized());
+        String refundBody = "{\"transactionRef\":\"T1\",\"amount\":5.00,\"reason\":\"chargeback\"}";
+        mockMvc.perform(post("/api/payments/refunds").contentType(MediaType.APPLICATION_JSON).content(refundBody)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -535,12 +541,16 @@ class AuthorizationHardeningControllerTest {
         senior.setUsername("senior_1");
         senior.setRole("SENIOR");
         when(accountSecurityService.requireUserByToken("token-senior")).thenReturn(senior);
-        
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "insufficient role permissions"))
+                .when(accountSecurityService)
+                .requireAnyRole("SENIOR", "SERVICE_STAFF", "ORG_ADMIN", "PLATFORM_ADMIN");
+
         // Record tender requires SERVICE_STAFF+
+        String tenderBody = "{\"transactionRef\":\"T1\",\"tenderType\":\"CASH\",\"amount\":10.00,\"merchantCode\":\"M1\"}";
         mockMvc.perform(post("/api/payments/tenders")
                         .header("X-Auth-Token", "token-senior")
                         .contentType("application/json")
-                        .content("{}"))
+                        .content(tenderBody))
                 .andExpect(status().isForbidden());
     }
 }

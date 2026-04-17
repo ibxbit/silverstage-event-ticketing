@@ -1,4 +1,4 @@
-$(function () {
+(function () {
   window.SilverStage.Events.init();
   window.SilverStage.Orders.init();
   window.SilverStage.Discovery.init();
@@ -9,4 +9,4 @@ $(function () {
   window.SilverStage.Core.resetDynamicDom();
   window.SilverStage.Core.applyAuthorizationUi();
   window.SilverStage.Events.loadEvents();
-});
+}());

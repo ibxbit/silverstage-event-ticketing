@@ -36,7 +36,7 @@ public final class TicketingApiFunctionalTests {
     }
 
     private static void testCreateTicketTypeRequiresAdmin(long eventId) throws Exception {
-        String body = "{\"name\":\"General\",\"price\":25.00,\"quota\":100,\"channel\":\"ONLINE_PORTAL\"}";
+        String body = ticketTypePayload("GEN-NOAUTH");
         HttpResponse<String> resp = ApiFunctionalTestHelper.request(
             "POST", "/api/events/" + eventId + "/ticket-types", body,
             Map.of("Content-Type", "application/json")
@@ -46,17 +46,31 @@ public final class TicketingApiFunctionalTests {
 
     private static long testCreateTicketTypeWithAdmin(long eventId) throws Exception {
         String adminToken = ApiFunctionalTestHelper.registerAndLogin("ORG_ADMIN");
-        String body = "{\"name\":\"General " + System.currentTimeMillis()
-            + "\",\"price\":20.00,\"quota\":50,\"channel\":\"ONLINE_PORTAL\"}";
+        String body = ticketTypePayload("GEN-" + System.currentTimeMillis());
         HttpResponse<String> resp = ApiFunctionalTestHelper.request(
             "POST", "/api/events/" + eventId + "/ticket-types", body,
             Map.of("Content-Type", "application/json", "X-Auth-Token", adminToken)
         );
         ApiFunctionalTestHelper.requireStatus(resp, 200, 201);
-        if (!resp.body().contains("\"id\"")) {
+        if (!resp.body().contains("\"id\"") && !resp.body().contains("\"ticketTypeId\"")) {
             throw new IllegalStateException("create ticket type response missing id: " + resp.body());
         }
-        return ApiFunctionalTestHelper.extractFirstLong(resp.body(), "id");
+        String idKey = resp.body().contains("\"ticketTypeId\"") ? "ticketTypeId" : "id";
+        return ApiFunctionalTestHelper.extractFirstLong(resp.body(), idKey);
+    }
+
+    private static String ticketTypePayload(String code) {
+        return "{\"code\":\"" + code + "\","
+            + "\"name\":\"General Admission\","
+            + "\"basePrice\":25.00,"
+            + "\"visibilityScope\":\"PUBLIC\","
+            + "\"saleStart\":\"2026-01-01T00:00:00\","
+            + "\"saleEnd\":\"2026-12-31T23:59:59\","
+            + "\"totalInventory\":100,"
+            + "\"onlineQuotaPercent\":60,"
+            + "\"boxOfficeQuotaPercent\":40,"
+            + "\"tierRules\":[{\"minQuantity\":1,\"price\":25.00}]"
+            + "}";
     }
 
     private static void testListTicketTypes(long eventId) throws Exception {

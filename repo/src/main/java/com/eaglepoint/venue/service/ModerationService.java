@@ -205,7 +205,7 @@ public class ModerationService {
         List<NotificationItemResponse> mapped = new ArrayList<NotificationItemResponse>();
         for (UserNotification row : rows) {
             NotificationItemResponse item = new NotificationItemResponse();
-            item.setId(row.getId());
+            item.setNotificationId(row.getId());
             item.setMessage(row.getMessage());
             item.setType(row.getNotificationType());
             item.setReadFlag(row.getReadFlag());

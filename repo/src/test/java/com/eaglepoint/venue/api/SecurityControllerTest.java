@@ -8,7 +8,6 @@ import com.eaglepoint.venue.service.RequestAuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -40,13 +39,13 @@ class SecurityControllerTest {
 
     private ModerationController moderationController;
 
-    @InjectMocks
     private PaymentController paymentController;
 
     @BeforeEach
     void setUp() {
         requestAuthorizationService = new RequestAuthorizationService(accountSecurityService);
         moderationController = new ModerationController(moderationService, requestAuthorizationService);
+        paymentController = new PaymentController(paymentReconciliationService, requestAuthorizationService);
         mockMvc = MockMvcBuilders.standaloneSetup(moderationController, paymentController).build();
     }
 

@@ -28,15 +28,31 @@ VALUES
     (1, 1, 'A01', 'AVAILABLE'),
     (2, 1, 'A02', 'RESERVED'),
     (3, 2, 'B01', 'AVAILABLE'),
-    (4, 3, 'C01', 'AVAILABLE');
+    (4, 3, 'C01', 'AVAILABLE'),
+    (5, 1, 'A03', 'AVAILABLE'),
+    (6, 1, 'A04', 'AVAILABLE'),
+    (7, 1, 'A05', 'AVAILABLE'),
+    (8, 1, 'A06', 'AVAILABLE'),
+    (9, 1, 'A07', 'AVAILABLE'),
+    (10, 1, 'A08', 'AVAILABLE'),
+    (11, 2, 'B02', 'AVAILABLE'),
+    (12, 2, 'B03', 'AVAILABLE'),
+    (13, 2, 'B04', 'AVAILABLE'),
+    (14, 2, 'B05', 'AVAILABLE'),
+    (15, 3, 'C02', 'AVAILABLE'),
+    (16, 3, 'C03', 'AVAILABLE'),
+    (17, 3, 'C04', 'AVAILABLE'),
+    (18, 3, 'C05', 'AVAILABLE'),
+    (19, 3, 'C06', 'AVAILABLE'),
+    (20, 3, 'C07', 'AVAILABLE');
 
 INSERT INTO ticket_type (
     id, event_id, code, name, base_price, visibility_scope, sale_start, sale_end, total_inventory
 )
 VALUES
-    (1, 1, 'GENERAL_ADMISSION', 'General Admission', 45.00, 'PUBLIC', '2026-03-25 09:00:00', '2026-04-10 17:00:00', 300),
-    (2, 1, 'SENIOR_DISCOUNT', 'Senior Discount', 30.00, 'SENIOR_ONLY', '2026-03-25 09:00:00', '2026-04-10 17:00:00', 180),
-    (3, 1, 'COMPANION_PASS', 'Companion Pass', 20.00, 'COMPANION_ONLY', '2026-03-25 09:00:00', '2026-04-10 17:00:00', 120);
+    (1, 1, 'GENERAL_ADMISSION', 'General Admission', 45.00, 'PUBLIC', '2026-03-25 09:00:00', '2027-04-10 17:00:00', 300),
+    (2, 1, 'SENIOR_DISCOUNT', 'Senior Discount', 30.00, 'SENIOR_ONLY', '2026-03-25 09:00:00', '2027-04-10 17:00:00', 180),
+    (3, 1, 'COMPANION_PASS', 'Companion Pass', 20.00, 'COMPANION_ONLY', '2026-03-25 09:00:00', '2027-04-10 17:00:00', 120);
 
 INSERT INTO ticket_price_tier (id, ticket_type_id, tier_order, min_quantity, price)
 VALUES

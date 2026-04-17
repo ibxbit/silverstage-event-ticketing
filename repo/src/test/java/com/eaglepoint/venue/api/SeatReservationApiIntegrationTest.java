@@ -45,7 +45,6 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
     @Test
     void createSeatOrder_success() {
         String orderCode = unique("SO");
-        // Seat 3 (zone_id=2, B01, AVAILABLE) avoids conflict with seat 1 used elsewhere
         String body = "{"
                 + "\"eventId\":1,"
                 + "\"sessionId\":1,"
@@ -53,7 +52,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[3]"
+                + "\"seatIds\":[5]"
                 + "}";
 
         ResponseEntity<String> resp = postJson("/api/seat-orders", body, seniorToken);
@@ -112,7 +111,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"forged\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[1]"
+                + "\"seatIds\":[6]"
                 + "}";
 
         ResponseEntity<String> resp = postJson("/api/seat-orders", body, seniorToken);
@@ -130,7 +129,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
 
     @Test
     void markOrderPaid_success() {
-        // Seat 4 (C01) belongs to zone 3 which is in session 2 — use correct sessionId
+        // Seat 15 (C02) belongs to zone 3 which is in session 2 — use correct sessionId
         String orderCode = unique("SO");
         String createBody = "{"
                 + "\"eventId\":1,"
@@ -139,7 +138,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[4]"
+                + "\"seatIds\":[15]"
                 + "}";
 
         ResponseEntity<String> createResp = postJson("/api/seat-orders", createBody, seniorToken);
@@ -192,7 +191,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
         // Register a second senior who does NOT own the order
         String secondSeniorToken = registerAndLogin("seat_senior2", "SENIOR");
 
-        // First senior creates the order (seat 3, session 1)
+        // First senior creates the order (session 1 seat)
         String orderCode = unique("SO");
         String createBody = "{"
                 + "\"eventId\":1,"
@@ -201,7 +200,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[3]"
+                + "\"seatIds\":[7]"
                 + "}";
         ResponseEntity<String> createResp = postJson("/api/seat-orders", createBody, seniorToken);
         assertStatus(createResp, HttpStatus.CREATED);
@@ -223,7 +222,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[1]"
+                + "\"seatIds\":[8]"
                 + "}";
         ResponseEntity<String> createResp = postJson("/api/seat-orders", createBody, seniorToken);
         assertStatus(createResp, HttpStatus.CREATED);
@@ -249,7 +248,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[4]"
+                + "\"seatIds\":[16]"
                 + "}";
         ResponseEntity<String> createResp = postJson("/api/seat-orders", createBody, seniorToken);
         assertStatus(createResp, HttpStatus.CREATED);
@@ -357,13 +356,13 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[3]"
+                + "\"seatIds\":[9]"
                 + "}";
 
         ResponseEntity<String> firstResp = postJson("/api/seat-orders", firstBody, seniorToken);
         assertStatus(firstResp, HttpStatus.CREATED);
 
-        // Seat 1 is still AVAILABLE; same orderCode triggers DataIntegrityViolationException -> 409
+        // Seat 10 is AVAILABLE; same orderCode triggers DataIntegrityViolationException -> 409
         String secondBody = "{"
                 + "\"eventId\":1,"
                 + "\"sessionId\":1,"
@@ -371,7 +370,7 @@ class SeatReservationApiIntegrationTest extends ApiTestBase {
                 + "\"orderCode\":\"" + orderCode + "\","
                 + "\"buyerReference\":\"ignored\","
                 + "\"channel\":\"ONLINE_PORTAL\","
-                + "\"seatIds\":[1]"
+                + "\"seatIds\":[10]"
                 + "}";
 
         ResponseEntity<String> secondResp = postJson("/api/seat-orders", secondBody, seniorToken);

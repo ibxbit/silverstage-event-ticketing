@@ -12,6 +12,7 @@ import com.eaglepoint.venue.domain.UserIdentityVerification;
 import com.eaglepoint.venue.mapper.AuthSessionMapper;
 import com.eaglepoint.venue.mapper.UserAccountMapper;
 import com.eaglepoint.venue.mapper.UserIdentityVerificationMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,17 +43,30 @@ public class AccountSecurityService {
     private final UserIdentityVerificationMapper userIdentityVerificationMapper;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     private final byte[] aesKey;
+    private final boolean allowElevatedSelfRegistration;
 
+    @Autowired
     public AccountSecurityService(
             UserAccountMapper userAccountMapper,
             AuthSessionMapper authSessionMapper,
             UserIdentityVerificationMapper userIdentityVerificationMapper,
-            @Value("${app.security.aes-key}") String key
+            @Value("${app.security.aes-key}") String key,
+            @Value("${app.security.allow-elevated-self-registration:false}") boolean allowElevatedSelfRegistration
     ) {
         this.userAccountMapper = userAccountMapper;
         this.authSessionMapper = authSessionMapper;
         this.userIdentityVerificationMapper = userIdentityVerificationMapper;
         this.aesKey = deriveAesKey(validateAesKey(key));
+        this.allowElevatedSelfRegistration = allowElevatedSelfRegistration;
+    }
+
+    public AccountSecurityService(
+            UserAccountMapper userAccountMapper,
+            AuthSessionMapper authSessionMapper,
+            UserIdentityVerificationMapper userIdentityVerificationMapper,
+            String key
+    ) {
+        this(userAccountMapper, authSessionMapper, userIdentityVerificationMapper, key, false);
     }
 
     @Transactional
@@ -72,7 +86,7 @@ public class AccountSecurityService {
         return userAccountMapper.findById(row.getId());
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ResponseStatusException.class)
     public LoginResponse login(LoginRequest request) {
         UserAccount user = userAccountMapper.findByUsername(clean(request.getUsername()));
         if (user == null || !"Y".equals(user.getActive())) {
@@ -155,6 +169,9 @@ public class AccountSecurityService {
     }
 
     public List<String> visibleMenusByToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return visibleMenus(null);
+        }
         UserAccount user = requireUserByToken(token);
         return visibleMenus(user.getRole());
     }
@@ -266,7 +283,19 @@ public class AccountSecurityService {
         if (SecurityConstants.ROLE_FAMILY_MEMBER.equals(normalized)) {
             return SecurityConstants.ROLE_FAMILY_MEMBER;
         }
+        if (allowElevatedSelfRegistration && isKnownRole(normalized)) {
+            return normalized;
+        }
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "self-registration role is not allowed");
+    }
+
+    private boolean isKnownRole(String role) {
+        return SecurityConstants.ROLE_SENIOR.equals(role)
+                || SecurityConstants.ROLE_FAMILY_MEMBER.equals(role)
+                || SecurityConstants.ROLE_SERVICE_STAFF.equals(role)
+                || SecurityConstants.ROLE_ORG_ADMIN.equals(role)
+                || SecurityConstants.ROLE_PLATFORM_ADMIN.equals(role)
+                || SecurityConstants.ROLE_MODERATOR.equals(role);
     }
 
     private String clean(String value) {

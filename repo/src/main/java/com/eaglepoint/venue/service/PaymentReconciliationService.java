@@ -148,8 +148,12 @@ public class PaymentReconciliationService {
 
     @Transactional
     public ReconciliationReportResponse importSettlementFile(String actor, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
+        if (file == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "settlement file is required");
+        }
+        if (file.isEmpty()) {
+            trace(actor, "SETTLEMENT_IMPORT", "file", file.getOriginalFilename(), "imported=0,processed=0");
+            return buildReport(0, 0);
         }
         String content;
         try {

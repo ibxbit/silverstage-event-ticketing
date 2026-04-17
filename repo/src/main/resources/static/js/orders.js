@@ -91,18 +91,23 @@
   }
 
   function init() {
-    $(document).on("click", ".seat.available", function () {
-      const seatId = Number($(this).data("seat-id"));
-      if (SilverStage.state.selectedSeatIds.includes(seatId)) {
-        SilverStage.state.selectedSeatIds = SilverStage.state.selectedSeatIds.filter(
-          (id) => id !== seatId,
-        );
-        $(this).removeClass("selected");
-      } else {
-        SilverStage.state.selectedSeatIds.push(seatId);
-        $(this).addClass("selected");
-      }
-    });
+    if (!window.__silverStageOrdersSeatHandler) {
+      document.addEventListener("click", function (event) {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (!target.classList.contains("seat") || !target.classList.contains("available")) return;
+        const seatId = Number(target.getAttribute("data-seat-id"));
+        const state = window.SilverStage.state;
+        if (state.selectedSeatIds.includes(seatId)) {
+          state.selectedSeatIds = state.selectedSeatIds.filter((id) => id !== seatId);
+          target.classList.remove("selected");
+        } else {
+          state.selectedSeatIds.push(seatId);
+          target.classList.add("selected");
+        }
+      });
+      window.__silverStageOrdersSeatHandler = true;
+    }
 
     $("#load-seat-map").on("click", function () {
       SilverStage.state.selectedSeatIds = [];

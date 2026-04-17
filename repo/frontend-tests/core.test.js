@@ -139,20 +139,21 @@ test("applyAuthorizationUi shows auth sections when authenticated", () => {
 });
 
 test("applyAuthorizationUi respects required roles", () => {
+  // Capture the section element BEFORE any apply, so the reference survives detach
+  const sectionEl = $("[data-auth-section='authenticated'][data-required-roles='ORG_ADMIN']")[0];
+
   window.localStorage.setItem("silverstage.authToken", "tok");
   window.localStorage.setItem("silverstage.authRole", "SENIOR");
 
   // SENIOR does not satisfy ORG_ADMIN requirement — section should be detached
   window.SilverStage.Core.applyAuthorizationUi();
-
-  const $section = $("[data-auth-section='authenticated'][data-required-roles='ORG_ADMIN']");
-  expect(document.body.contains($section[0])).toBe(false);
+  expect(document.body.contains(sectionEl)).toBe(false);
 
   // Now elevate to ORG_ADMIN — section should be re-attached
   window.localStorage.setItem("silverstage.authRole", "ORG_ADMIN");
   window.SilverStage.Core.applyAuthorizationUi();
 
-  expect(document.body.contains($section[0])).toBe(true);
+  expect(document.body.contains(sectionEl)).toBe(true);
 });
 
 test("resetForNewSession combines state and DOM reset", () => {

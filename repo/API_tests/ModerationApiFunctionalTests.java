@@ -62,7 +62,7 @@ public final class ModerationApiFunctionalTests {
 
     private static void testDecideReport(long reportId) throws Exception {
         String adminToken = ApiFunctionalTestHelper.registerAndLogin("ORG_ADMIN");
-        String body = "{\"decision\":\"WARNING\",\"note\":\"API functional test decision\"}";
+        String body = "{\"penaltyType\":\"MUTE_24H\",\"decisionNotes\":\"API functional test decision\"}";
         HttpResponse<String> resp = ApiFunctionalTestHelper.request(
             "POST", "/api/moderation/reports/" + reportId + "/decision", body,
             Map.of("Content-Type", "application/json", "X-Auth-Token", adminToken)

@@ -8,8 +8,8 @@ import com.eaglepoint.venue.domain.OperationTrace;
 import com.eaglepoint.venue.domain.PaymentTransaction;
 import com.eaglepoint.venue.domain.RefundTransaction;
 import com.eaglepoint.venue.domain.UserAccount;
-import com.eaglepoint.venue.service.AccountSecurityService;
 import com.eaglepoint.venue.service.PaymentReconciliationService;
+import com.eaglepoint.venue.service.RequestAuthorizationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +30,11 @@ import java.util.Map;
 @RequestMapping("/api/payments")
 public class PaymentController {
     private final PaymentReconciliationService paymentReconciliationService;
-    private final AccountSecurityService accountSecurityService;
+    private final RequestAuthorizationService requestAuthorizationService;
 
-    public PaymentController(PaymentReconciliationService paymentReconciliationService, AccountSecurityService accountSecurityService) {
+    public PaymentController(PaymentReconciliationService paymentReconciliationService, RequestAuthorizationService requestAuthorizationService) {
         this.paymentReconciliationService = paymentReconciliationService;
-        this.accountSecurityService = accountSecurityService;
+        this.requestAuthorizationService = requestAuthorizationService;
     }
 
     @PostMapping("/tenders")
@@ -43,8 +43,7 @@ public class PaymentController {
             @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody PaymentTenderRequest request
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_SERVICE_STAFF, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        UserAccount user = requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_SERVICE_STAFF, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.recordTender(user.getUsername(), request);
     }
 
@@ -57,8 +56,7 @@ public class PaymentController {
             @RequestParam String status,
             @RequestParam(defaultValue = "gateway") String source
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        UserAccount user = requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         boolean processed = paymentReconciliationService.processCallback(user.getUsername(), transactionRef, gatewayBatchRef, settledAmount, status, source);
         return java.util.Collections.singletonMap("processed", processed);
     }
@@ -68,8 +66,7 @@ public class PaymentController {
             @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @RequestParam("file") MultipartFile file
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        UserAccount user = requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.importSettlementFile(user.getUsername(), file);
     }
 
@@ -79,22 +76,19 @@ public class PaymentController {
             @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @Valid @RequestBody RefundRequest request
     ) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        UserAccount user = requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.refund(user.getUsername(), request);
     }
 
     @GetMapping("/reconciliation/report")
     public ReconciliationReportResponse report(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.reconciliationReport();
     }
 
     @GetMapping("/reconciliation/traces")
     public List<OperationTrace> traces(@RequestHeader(value = "X-Auth-Token", required = false) String token) {
-        UserAccount user = accountSecurityService.requireUserByToken(token);
-        accountSecurityService.requireAnyRole(user.getRole(), SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
+        requestAuthorizationService.requireAnyRole(token, SecurityConstants.ROLE_ORG_ADMIN, SecurityConstants.ROLE_PLATFORM_ADMIN);
         return paymentReconciliationService.traces();
     }
 }

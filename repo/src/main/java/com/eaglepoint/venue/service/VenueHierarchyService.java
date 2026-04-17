@@ -67,7 +67,11 @@ public class VenueHierarchyService {
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
 
-        eventMapper.insert(event);
+        try {
+            eventMapper.insert(event);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "event code already exists");
+        }
         trace(clean(actor), "EVENT_CREATED", "event", event.getCode(), "name=" + event.getName());
         return event;
     }

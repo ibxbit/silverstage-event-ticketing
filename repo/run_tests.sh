@@ -38,12 +38,15 @@ fi
 npm run test:frontend -- --json --outputFile target/frontend-test-summary.json || FRONTEND_EXIT=$?
 
 echo "[3/3] Running API functional tests from API_tests/"
-if curl -fsS "http://localhost:8080/api/events" >/dev/null 2>&1; then
-  echo "Using existing API server on http://localhost:8080"
+API_PORT="${API_PORT:-8080}"
+API_BASE_URL="${SILVERSTAGE_BASE_URL:-http://localhost:${API_PORT}}"
+export SILVERSTAGE_BASE_URL="$API_BASE_URL"
+if curl -fsS "${API_BASE_URL}/api/events" >/dev/null 2>&1; then
+  echo "Using existing API server on ${API_BASE_URL}"
 else
-  echo "Starting API server with SPRING_PROFILES_ACTIVE=test"
+  echo "Starting API server with SPRING_PROFILES_ACTIVE=test on port ${API_PORT}"
   if [[ "$API_EXIT" -eq 0 ]]; then
-    env -u CLASSPATH SPRING_PROFILES_ACTIVE=test mvn -q -DskipTests spring-boot:run > target/api-server.log 2>&1 &
+    env -u CLASSPATH SPRING_PROFILES_ACTIVE=test mvn -q -DskipTests -Dspring-boot.run.arguments="--server.port=${API_PORT}" spring-boot:run > target/api-server.log 2>&1 &
     SERVER_PID=$!
   else
     echo "Skipping API server start due to earlier Maven precheck failure"
@@ -51,7 +54,7 @@ else
   API_READY=0
   if [[ "$API_EXIT" -eq 0 ]]; then
     for _ in {1..60}; do
-      if curl -fsS "http://localhost:8080/api/events" >/dev/null 2>&1; then
+      if curl -fsS "${API_BASE_URL}/api/events" >/dev/null 2>&1; then
         API_READY=1
         break
       fi
